@@ -9,3 +9,9 @@ export interface Question {
   whyOthersWrong: Record<string, string>;
   gcpLink?: string;
 }
+
+export interface DomainScore {
+  domain: string;
+  correct: number;
+  total: number;
+}

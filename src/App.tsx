@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { questions } from './data/questions';
-import type { Question } from './data/types';
+import type { Question, DomainScore } from './data/types';
 import { StartScreen } from './components/StartScreen';
 import { QuizScreen } from './components/QuizScreen';
 import { ResultsScreen } from './components/ResultsScreen';
 
-const QUIZ_SIZE = 10;
+const QUIZ_SIZE_OPTIONS = [5, 10, 20, 30, 50] as const;
 
 type Screen = 'start' | 'quiz' | 'results';
 
@@ -20,16 +20,19 @@ function pickRandom<T>(array: T[], count: number): T[] {
 
 function App() {
   const [screen, setScreen] = useState<Screen>('start');
+  const [quizSize, setQuizSize] = useState(10);
   const [quizQuestions, setQuizQuestions] = useState<Question[]>([]);
   const [finalScore, setFinalScore] = useState({ score: 0, total: 0 });
+  const [domainScores, setDomainScores] = useState<DomainScore[]>([]);
 
   const handleStart = () => {
-    setQuizQuestions(pickRandom(questions, QUIZ_SIZE));
+    setQuizQuestions(pickRandom(questions, quizSize));
     setScreen('quiz');
   };
 
-  const handleFinish = (score: number, total: number) => {
+  const handleFinish = (score: number, total: number, scores: DomainScore[]) => {
     setFinalScore({ score, total });
+    setDomainScores(scores);
     setScreen('results');
   };
 
@@ -66,7 +69,13 @@ function App() {
 
       <main className="max-w-3xl mx-auto px-4 py-8">
         {screen === 'start' && (
-          <StartScreen onStart={handleStart} totalQuestions={questions.length} quizSize={QUIZ_SIZE} />
+          <StartScreen
+            onStart={handleStart}
+            totalQuestions={questions.length}
+            quizSize={quizSize}
+            sizeOptions={[...QUIZ_SIZE_OPTIONS]}
+            onSizeChange={setQuizSize}
+          />
         )}
         {screen === 'quiz' && (
           <QuizScreen questions={quizQuestions} onFinish={handleFinish} />
@@ -75,6 +84,7 @@ function App() {
           <ResultsScreen
             score={finalScore.score}
             total={finalScore.total}
+            domainScores={domainScores}
             onRestart={handleStart}
           />
         )}

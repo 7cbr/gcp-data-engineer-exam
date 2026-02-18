@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import type { Question } from '../data/types';
+import { useState, useRef } from 'react';
+import type { Question, DomainScore } from '../data/types';
 
 interface QuizScreenProps {
   questions: Question[];
-  onFinish: (score: number, total: number) => void;
+  onFinish: (score: number, total: number, domainScores: DomainScore[]) => void;
 }
 
 const difficultyConfig = {
@@ -17,6 +17,7 @@ export function QuizScreen({ questions, onFinish }: QuizScreenProps) {
   const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [score, setScore] = useState(0);
+  const resultsRef = useRef<{ domain: string; correct: boolean }[]>([]);
 
   const question = questions[currentIndex];
   const isMultiple = question.correctAnswers.length > 1;
@@ -42,17 +43,30 @@ export function QuizScreen({ questions, onFinish }: QuizScreenProps) {
   const handleSubmit = () => {
     if (selectedAnswers.length === 0) return;
     setHasSubmitted(true);
-    if (
+    const wasCorrect =
       selectedAnswers.length === question.correctAnswers.length &&
-      selectedAnswers.every((a) => correctSet.has(a))
-    ) {
+      selectedAnswers.every((a) => correctSet.has(a));
+    if (wasCorrect) {
       setScore((s) => s + 1);
     }
+    resultsRef.current.push({ domain: question.domain, correct: wasCorrect });
   };
 
   const handleNext = () => {
     if (currentIndex + 1 >= questions.length) {
-      onFinish(score, questions.length);
+      const domainMap = new Map<string, { correct: number; total: number }>();
+      for (const r of resultsRef.current) {
+        const entry = domainMap.get(r.domain) ?? { correct: 0, total: 0 };
+        entry.total++;
+        if (r.correct) entry.correct++;
+        domainMap.set(r.domain, entry);
+      }
+      const domainScores: DomainScore[] = Array.from(domainMap, ([domain, { correct, total }]) => ({
+        domain,
+        correct,
+        total,
+      }));
+      onFinish(score, questions.length, domainScores);
       return;
     }
     setCurrentIndex((i) => i + 1);

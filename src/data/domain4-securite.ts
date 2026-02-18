@@ -320,5 +320,104 @@ export const domain4Questions: Question[] = [
       "D": "Désactiver VPC Service Controls, même temporairement, crée une fenêtre de vulnérabilité où les données sensibles peuvent être exfiltrées. C'est une pratique de sécurité inacceptable."
     },
     gcpLink: "https://cloud.google.com/vpc-service-controls/docs/egress-rules"
+  },
+  {
+    id: 116,
+    domain: "Sécurité, conformité et gouvernance des données",
+    difficulty: "facile",
+    question: "Votre équipe data utilise Cloud Storage pour stocker des fichiers de données. Un développeur partage un bucket en le rendant public par erreur, exposant des données clients sur Internet. Quelle mesure préventive aurait empêché cette erreur ?",
+    options: [
+      { label: "A", text: "Activer le versioning sur tous les buckets" },
+      { label: "B", text: "Configurer une Organization Policy (constraints/storage.publicAccessPrevention) qui interdit l'accès public sur tous les buckets de l'organisation" },
+      { label: "C", text: "Chiffrer les données avec CMEK pour qu'elles soient illisibles publiquement" },
+      { label: "D", text: "Utiliser des ACL au lieu de l'IAM pour gérer les permissions" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "L'Organization Policy 'publicAccessPrevention' empêche la configuration d'un accès public sur tous les buckets Cloud Storage de l'organisation. Même si un utilisateur tente de rendre un bucket public, la policy bloque l'action. C'est une protection au niveau organisationnel qui prévient les erreurs humaines.",
+    whyOthersWrong: {
+      "A": "Le versioning protège contre la suppression accidentelle de fichiers mais n'empêche pas de rendre un bucket public.",
+      "C": "Le chiffrement CMEK protège les données au repos mais ne bloque pas l'accès public. Un bucket public avec CMEK reste accessible car Google déchiffre automatiquement les données lors de la lecture.",
+      "D": "Les ACL sont un mécanisme de contrôle d'accès plus ancien et moins sécurisé que l'IAM. Elles n'empêchent pas de configurer un accès public et sont plus difficiles à auditer."
+    },
+    gcpLink: "https://cloud.google.com/storage/docs/public-access-prevention"
+  },
+  {
+    id: 117,
+    domain: "Sécurité, conformité et gouvernance des données",
+    difficulty: "intermédiaire",
+    question: "Votre entreprise utilise BigQuery et doit se conformer aux réglementations de souveraineté des données en Europe. Vous devez garantir que les données et les traitements (requêtes) restent exclusivement dans la région EU, et que les clés de chiffrement sont gérées dans la même juridiction. Quelle combinaison de fonctionnalités implémentez-vous ?",
+    options: [
+      { label: "A", text: "Datasets BigQuery dans la région EU, CMEK avec des clés Cloud KMS hébergées en EU, et Organization Policy pour restreindre les régions autorisées" },
+      { label: "B", text: "Datasets BigQuery multi-régionaux US avec un VPN vers l'Europe" },
+      { label: "C", text: "Cloud SQL en Europe comme alternative à BigQuery" },
+      { label: "D", text: "BigQuery avec chiffrement par défaut et une note dans la documentation interne précisant que les données sont européennes" }
+    ],
+    correctAnswers: ["A"],
+    explanation: "Les datasets EU garantissent que les données et les traitements restent dans l'UE. CMEK avec des clés dans une région EU assure que les clés de chiffrement sont dans la même juridiction. L'Organization Policy (gcp.resourceLocations) empêche la création de ressources hors des régions autorisées, fermant les failles de conformité.",
+    whyOthersWrong: {
+      "B": "Des datasets US stockent les données aux États-Unis, ce qui viole directement les exigences de souveraineté européenne. Un VPN ne change pas la localisation des données.",
+      "C": "Cloud SQL n'est pas un remplacement pour BigQuery en termes de capacités analytiques. La souveraineté des données concerne la localisation, pas le choix du service.",
+      "D": "Le chiffrement par défaut utilise des clés gérées par Google sans garantie de localisation. Une note documentaire n'a aucune valeur de conformité technique."
+    },
+    gcpLink: "https://cloud.google.com/bigquery/docs/locations"
+  },
+  {
+    id: 118,
+    domain: "Sécurité, conformité et gouvernance des données",
+    difficulty: "difficile",
+    question: "Votre organisation doit partager un dataset BigQuery anonymisé avec un partenaire de recherche. Le dataset contient des données médicales où chaque ligne représente un patient. Même après suppression des identifiants directs (nom, email), vous craignez la ré-identification par croisement de quasi-identifiants (âge, code postal, diagnostic). Quelle technique de Cloud DLP appliquez-vous ?",
+    options: [
+      { label: "A", text: "Supprimer uniquement les colonnes contenant des identifiants directs (nom, email, numéro de sécurité sociale)" },
+      { label: "B", text: "Appliquer le k-anonymity ou la l-diversity via Cloud DLP pour généraliser les quasi-identifiants (tranches d'âge au lieu d'âge exact, préfixe de code postal)" },
+      { label: "C", text: "Chiffrer toutes les données avec CMEK avant le partage" },
+      { label: "D", text: "Remplacer tous les quasi-identifiants par des valeurs aléatoires" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Le k-anonymity garantit que chaque combinaison de quasi-identifiants correspond à au moins k individus, empêchant la ré-identification par croisement. Cloud DLP peut généraliser l'âge en tranches (30-35 au lieu de 32), tronquer les codes postaux (750** au lieu de 75001), assurant l'anonymisation statistique tout en préservant l'utilité analytique des données pour la recherche.",
+    whyOthersWrong: {
+      "A": "Supprimer les identifiants directs est insuffisant. La ré-identification par croisement de quasi-identifiants (âge + code postal + diagnostic) est un risque avéré démontré par de nombreuses études.",
+      "C": "Chiffrer avec CMEK rend les données inutilisables pour le partenaire qui n'a pas la clé. L'objectif est de partager des données analysables, pas des données chiffrées.",
+      "D": "Remplacer les quasi-identifiants par des valeurs aléatoires détruit l'utilité analytique des données. Les corrélations entre âge, localisation et diagnostic disparaissent, rendant la recherche impossible."
+    },
+    gcpLink: "https://cloud.google.com/sensitive-data-protection/docs/compute-risk-analysis"
+  },
+  {
+    id: 119,
+    domain: "Sécurité, conformité et gouvernance des données",
+    difficulty: "intermédiaire",
+    question: "Votre entreprise utilise BigQuery et souhaite implémenter un masquage dynamique des données : les analystes voient les données PII masquées (ex: 'Jean D***') tandis que les managers voient les données complètes. Le masquage doit s'appliquer automatiquement sans créer de vues séparées. Quelle fonctionnalité utilisez-vous ?",
+    options: [
+      { label: "A", text: "Créer des vues SQL avec des fonctions CASE basées sur SESSION_USER()" },
+      { label: "B", text: "Utiliser le dynamic data masking de BigQuery avec des policy tags et des règles de masquage associées à des groupes IAM" },
+      { label: "C", text: "Utiliser Cloud DLP pour créer une copie masquée de la table pour les analystes" },
+      { label: "D", text: "Implémenter le masquage dans l'application BI (Looker) au lieu de BigQuery" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Le dynamic data masking de BigQuery applique automatiquement des règles de masquage basées sur les policy tags et les groupes IAM. Les managers dans le groupe 'unmasked readers' voient les données complètes, les analystes voient les données masquées. Tout se configure au niveau de la table, sans créer de vues ni modifier les requêtes des utilisateurs.",
+    whyOthersWrong: {
+      "A": "Des vues SQL avec SESSION_USER() fonctionnent mais sont fragiles : les utilisateurs ayant accès à la table sous-jacente contournent le masquage. Le dynamic data masking s'applique au niveau de la colonne de la table elle-même.",
+      "C": "Créer une copie masquée duplique les données, ajoute des coûts de stockage et de synchronisation. Le masquage dynamique évite la duplication en masquant à la lecture.",
+      "D": "Le masquage côté application n'est pas sécurisé : les utilisateurs peuvent contourner Looker et accéder directement à BigQuery avec les données non masquées."
+    },
+    gcpLink: "https://cloud.google.com/bigquery/docs/column-data-masking-intro"
+  },
+  {
+    id: 120,
+    domain: "Sécurité, conformité et gouvernance des données",
+    difficulty: "difficile",
+    question: "Votre pipeline de données utilise un compte de service pour accéder à BigQuery et Cloud Storage. L'équipe sécurité détecte que la clé JSON du compte de service est stockée dans un dépôt Git public. Quelles actions immédiates et préventives prenez-vous ? (Sélectionnez 2 réponses)",
+    options: [
+      { label: "A", text: "Révoquer immédiatement la clé compromise, auditer les accès récents via Cloud Audit Logs, et créer une nouvelle clé" },
+      { label: "B", text: "Migrer vers Workload Identity (pour GKE) ou le compte de service attaché (pour Compute Engine/Dataflow) pour éliminer le besoin de clés JSON exportées" },
+      { label: "C", text: "Changer le mot de passe du compte de service" },
+      { label: "D", text: "Supprimer le fichier du dépôt Git et considérer le problème résolu" }
+    ],
+    correctAnswers: ["A", "B"],
+    explanation: "L'action immédiate est de révoquer la clé compromise et d'auditer les accès (qui a fait quoi avec cette clé). La mesure préventive est de migrer vers Workload Identity ou les comptes de service attachés qui éliminent complètement le besoin de clés JSON exportées, empêchant ce type d'incident à l'avenir.",
+    whyOthersWrong: {
+      "C": "Les comptes de service GCP n'ont pas de mots de passe. Ils utilisent des clés cryptographiques (JSON ou P12). L'action est de révoquer la clé, pas de changer un mot de passe.",
+      "D": "Supprimer le fichier du dépôt ne suffit pas : l'historique Git conserve le fichier, et la clé a pu être copiée par quiconque a eu accès au dépôt. La clé doit être considérée comme compromise et révoquée."
+    },
+    gcpLink: "https://cloud.google.com/iam/docs/best-practices-for-managing-service-account-keys"
   }
 ];

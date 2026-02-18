@@ -319,5 +319,105 @@ export const domain2Questions: Question[] = [
       "D": "Modifier du code directement sur les workers n'est pas possible dans Dataflow. Les workers exécutent le code du job tel que soumis lors de la création du pipeline."
     },
     gcpLink: "https://cloud.google.com/dataflow/docs/guides/updating-a-pipeline"
+  },
+  {
+    id: 106,
+    domain: "Ingestion et traitement des données",
+    difficulty: "facile",
+    question: "Votre équipe de data analysts (non développeurs) doit créer des pipelines ETL visuellement pour extraire des données de Cloud SQL, les transformer (filtrage, jointures, agrégations) et les charger dans BigQuery. Quel service GCP est le plus adapté ?",
+    options: [
+      { label: "A", text: "Cloud Dataflow avec du code Apache Beam en Java" },
+      { label: "B", text: "Cloud Data Fusion, un service ETL visuel basé sur CDAP avec une interface drag-and-drop" },
+      { label: "C", text: "Cloud Composer pour orchestrer des scripts SQL manuels" },
+      { label: "D", text: "Dataproc avec des notebooks Jupyter pour écrire du code Spark" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Cloud Data Fusion est un service ETL/ELT entièrement visuel basé sur CDAP. Il offre une interface graphique drag-and-drop pour concevoir des pipelines de données sans écrire de code. Il s'intègre nativement avec Cloud SQL, BigQuery et de nombreuses autres sources. C'est la solution idéale pour les utilisateurs non développeurs.",
+    whyOthersWrong: {
+      "A": "Dataflow avec Apache Beam nécessite des compétences en programmation Java ou Python, ce qui n'est pas adapté pour des analystes non développeurs.",
+      "C": "Cloud Composer est un orchestrateur de workflows, pas un outil ETL visuel. Il nécessite de coder les DAGs en Python et de gérer les scripts SQL séparément.",
+      "D": "Dataproc avec Spark nécessite des compétences en programmation Python/Scala et la connaissance du framework Spark."
+    },
+    gcpLink: "https://cloud.google.com/data-fusion/docs/concepts/overview"
+  },
+  {
+    id: 107,
+    domain: "Ingestion et traitement des données",
+    difficulty: "intermédiaire",
+    question: "Votre application envoie 500 000 messages par seconde vers Pub/Sub. Vous constatez que les coûts Pub/Sub sont élevés et que la majorité des messages sont de petite taille (< 100 octets). La latence de livraison n'est pas critique (quelques secondes acceptables). Comment optimisez-vous les coûts ?",
+    options: [
+      { label: "A", text: "Compresser les messages individuellement avec gzip avant de les envoyer à Pub/Sub" },
+      { label: "B", text: "Utiliser Pub/Sub Lite qui offre un stockage zonal à coût réduit avec une capacité provisionnée" },
+      { label: "C", text: "Augmenter le nombre de topics pour distribuer la charge" },
+      { label: "D", text: "Migrer vers Cloud Tasks pour l'envoi de messages" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Pub/Sub Lite est une alternative à moindre coût qui offre des garanties de livraison similaires mais avec un stockage zonal (au lieu de régional) et une capacité provisionnée. Pour des messages à haut débit où la latence n'est pas critique, Pub/Sub Lite réduit les coûts de manière significative tout en conservant les fonctionnalités essentielles.",
+    whyOthersWrong: {
+      "A": "La compression de messages de < 100 octets est contre-productive : le surcoût de compression dépasse souvent la taille originale. De plus, Pub/Sub facture au minimum 1 Ko par message, donc la compression n'aide pas pour les petits messages.",
+      "C": "Augmenter le nombre de topics ne réduit pas les coûts. Chaque message est facturé indépendamment, quel que soit le nombre de topics.",
+      "D": "Cloud Tasks est conçu pour l'exécution asynchrone de tâches HTTP, pas pour la messagerie à haut débit. Il ne peut pas gérer 500 000 messages par seconde."
+    },
+    gcpLink: "https://cloud.google.com/pubsub/lite/docs/overview"
+  },
+  {
+    id: 108,
+    domain: "Ingestion et traitement des données",
+    difficulty: "difficile",
+    question: "Votre pipeline Dataflow streaming traite des événements provenant de Pub/Sub et écrit dans BigQuery. Vous devez implémenter un pattern de fenêtrage qui agrège les données par sessions utilisateur : une session se termine après 30 minutes d'inactivité. Les sessions peuvent durer de quelques minutes à plusieurs heures. Quel type de fenêtre Apache Beam utilisez-vous ?",
+    options: [
+      { label: "A", text: "Des fenêtres fixes (fixed windows) de 30 minutes" },
+      { label: "B", text: "Des fenêtres glissantes (sliding windows) de 30 minutes avec un pas de 5 minutes" },
+      { label: "C", text: "Des fenêtres de session (session windows) avec un gap timeout de 30 minutes" },
+      { label: "D", text: "Des fenêtres globales (global windows) avec un trigger périodique de 30 minutes" }
+    ],
+    correctAnswers: ["C"],
+    explanation: "Les fenêtres de session (session windows) d'Apache Beam regroupent dynamiquement les éléments par clé (utilisateur) en se basant sur un gap timeout. Si aucun nouvel événement n'arrive pour un utilisateur pendant 30 minutes, la session se ferme. Les sessions s'adaptent naturellement à la durée d'activité de chaque utilisateur, de quelques minutes à plusieurs heures.",
+    whyOthersWrong: {
+      "A": "Les fenêtres fixes de 30 minutes découpent le temps en segments rigides. Une session utilisateur continue pourrait être coupée en deux fenêtres, et une session courte serait mélangée avec d'autres activités dans la même fenêtre.",
+      "B": "Les fenêtres glissantes produisent des résultats chevauchants et ne capturent pas la notion de session. Un même événement apparaîtrait dans plusieurs fenêtres, faussant les agrégations.",
+      "D": "Les fenêtres globales avec trigger périodique ne séparent pas les sessions individuelles. Tous les événements d'un utilisateur seraient dans une seule fenêtre infinie, sans notion de fin de session."
+    },
+    gcpLink: "https://beam.apache.org/documentation/programming-guide/#session-windows"
+  },
+  {
+    id: 109,
+    domain: "Ingestion et traitement des données",
+    difficulty: "intermédiaire",
+    question: "Vous devez charger dans BigQuery des données provenant de multiples sources SaaS : Google Ads, Salesforce, et Google Analytics. Les données doivent être synchronisées quotidiennement. Quelle approche est la plus efficace ?",
+    options: [
+      { label: "A", text: "Écrire des scripts Python personnalisés avec les API de chaque service, exécutés par Cloud Scheduler" },
+      { label: "B", text: "Utiliser BigQuery Data Transfer Service pour les connecteurs natifs (Google Ads, GA) et Dataflow pour Salesforce" },
+      { label: "C", text: "Utiliser Fivetran ou un outil tiers de connecteurs pré-construits déployé sur GCP" },
+      { label: "D", text: "Exporter manuellement les données en CSV depuis chaque outil et les charger dans BigQuery" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "BigQuery Data Transfer Service fournit des connecteurs natifs et gratuits pour les produits Google (Google Ads, Google Analytics, YouTube) et certaines sources tierces. Pour Salesforce, un pipeline Dataflow avec le connecteur JDBC ou l'API Salesforce complète la solution. Cette approche maximise l'utilisation des outils natifs GCP.",
+    whyOthersWrong: {
+      "A": "Des scripts Python personnalisés nécessitent un effort de développement et de maintenance significatif : gestion des authentifications, pagination, schémas changeants, et gestion des erreurs pour chaque API.",
+      "C": "Fivetran est une bonne solution mais introduit un coût de licence supplémentaire et une dépendance externe. La question demande la solution la plus efficace avec les outils GCP natifs.",
+      "D": "L'export manuel est non scalable, sujet aux erreurs humaines, et ne peut pas être automatisé quotidiennement de manière fiable."
+    },
+    gcpLink: "https://cloud.google.com/bigquery/docs/dts-introduction"
+  },
+  {
+    id: 110,
+    domain: "Ingestion et traitement des données",
+    difficulty: "difficile",
+    question: "Votre pipeline Dataflow streaming consomme des messages JSON depuis Pub/Sub. Chaque message contient un champ 'event_type' qui détermine la destination : les événements de type 'click' vont dans une table BigQuery, les événements 'purchase' vont dans une autre table BigQuery ET dans Cloud Spanner, et les événements 'error' vont dans Cloud Storage. Comment implémentez-vous ce routage dans Apache Beam ?",
+    options: [
+      { label: "A", text: "Créer trois pipelines Dataflow séparés, chacun filtrant un type d'événement" },
+      { label: "B", text: "Utiliser la transformation Partition pour séparer le PCollection en branches par event_type, puis appliquer des sinks différents à chaque branche" },
+      { label: "C", text: "Utiliser un DoFn avec des tagged outputs (TupleTag) pour router les éléments vers différentes PCollections, puis écrire chaque PCollection vers sa destination" },
+      { label: "D", text: "Écrire tous les événements dans BigQuery puis utiliser des requêtes planifiées pour les redistribuer" }
+    ],
+    correctAnswers: ["C"],
+    explanation: "Les tagged outputs (TupleTag) dans Apache Beam permettent à un seul DoFn de router dynamiquement les éléments vers différentes PCollections de sortie en fonction d'une logique métier (ici l'event_type). Chaque PCollection résultante est ensuite connectée à son sink approprié (BigQuery, Spanner, Cloud Storage). C'est le pattern de routage natif et performant de Beam.",
+    whyOthersWrong: {
+      "A": "Trois pipelines séparés consommeraient trois fois les messages Pub/Sub (via trois abonnements), triplant les coûts de livraison Pub/Sub. De plus, la gestion opérationnelle de trois pipelines est plus complexe.",
+      "B": "La transformation Partition fonctionne mais nécessite un nombre fixe de partitions connu à la compilation. Les tagged outputs sont plus flexibles et idiomatiques dans Beam pour le routage conditionnel.",
+      "D": "Écrire tous les événements dans BigQuery puis redistribuer ajoute une latence significative, des coûts inutiles, et crée une dépendance inutile sur BigQuery pour les événements destinés à Spanner et Cloud Storage."
+    },
+    gcpLink: "https://beam.apache.org/documentation/programming-guide/#additional-outputs"
   }
 ];

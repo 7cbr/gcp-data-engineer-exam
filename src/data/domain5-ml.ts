@@ -359,5 +359,105 @@ export const domain5Questions: Question[] = [
       "D": "Un modèle LOGISTIC_REG sur des tokens est trop simple pour capturer les nuances sémantiques de l'analyse de sentiment dans un domaine spécialisé."
     },
     gcpLink: "https://cloud.google.com/vertex-ai/docs/text-data/sentiment-analysis/overview"
+  },
+  {
+    id: 121,
+    domain: "Machine Learning et AI sur GCP",
+    difficulty: "facile",
+    question: "Votre entreprise souhaite ajouter un chatbot intelligent à son site de support client. Le chatbot doit répondre aux questions fréquentes en se basant sur la documentation existante (FAQ, guides). Vous n'avez pas d'équipe ML et voulez une mise en production rapide. Quelle solution GCP est la plus adaptée ?",
+    options: [
+      { label: "A", text: "Entraîner un modèle GPT personnalisé avec Vertex AI sur la documentation" },
+      { label: "B", text: "Utiliser Dialogflow CX avec des intents et réponses configurés manuellement" },
+      { label: "C", text: "Utiliser Vertex AI Agents (anciennement Gen App Builder) avec un datastore contenant la documentation pour un chatbot RAG clé en main" },
+      { label: "D", text: "Déployer un modèle LLaMA open-source sur GKE avec un prompt system contenant la FAQ" }
+    ],
+    correctAnswers: ["C"],
+    explanation: "Vertex AI Agents permet de créer un chatbot RAG (Retrieval Augmented Generation) en quelques clics : vous importez la documentation dans un datastore, et le service génère automatiquement des réponses contextuelles basées sur le contenu. Pas besoin d'expertise ML ni de configuration d'intents manuels.",
+    whyOthersWrong: {
+      "A": "Entraîner un modèle personnalisé est excessif pour un chatbot FAQ. Le fine-tuning nécessite des données d'entraînement structurées, du temps et une expertise ML.",
+      "B": "Dialogflow CX nécessite de configurer manuellement chaque intent et réponse, ce qui est fastidieux pour une documentation volumineuse et ne gère pas les questions imprévues.",
+      "D": "Déployer LLaMA sur GKE nécessite une expertise en infrastructure et en ML. Le prompt system a une taille limitée et ne peut pas contenir toute la documentation."
+    },
+    gcpLink: "https://cloud.google.com/generative-ai-app-builder/docs/introduction"
+  },
+  {
+    id: 122,
+    domain: "Machine Learning et AI sur GCP",
+    difficulty: "intermédiaire",
+    question: "Votre application e-commerce doit proposer une recherche de produits par image : un utilisateur prend une photo d'un vêtement et l'application trouve des produits similaires dans le catalogue. Le catalogue contient 2 millions de produits avec des images. Quelle architecture GCP est la plus adaptée ?",
+    options: [
+      { label: "A", text: "Cloud Vision API pour classifier chaque image uploadée et chercher par label dans BigQuery" },
+      { label: "B", text: "Générer des embeddings pour chaque image du catalogue avec un modèle Vertex AI, les indexer dans Vertex AI Vector Search, et rechercher les vecteurs les plus similaires à l'image uploadée" },
+      { label: "C", text: "Stocker toutes les images dans Cloud Storage et comparer pixel par pixel avec un job Dataflow" },
+      { label: "D", text: "Utiliser BigQuery ML avec un modèle de classification d'images" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "La recherche par similarité d'images passe par les embeddings vectoriels : chaque image est convertie en un vecteur de haute dimension par un modèle de vision. Vertex AI Vector Search (anciennement Matching Engine) indexe ces vecteurs et effectue des recherches de plus proches voisins en millisecondes, même sur 2 millions d'éléments.",
+    whyOthersWrong: {
+      "A": "Cloud Vision API génère des labels génériques (\"robe\", \"bleu\") mais ne capture pas les nuances visuelles (style, motif, coupe) nécessaires pour trouver des produits similaires.",
+      "C": "La comparaison pixel par pixel est inefficace : deux photos du même vêtement sous des angles différents ne se ressemblent pas au niveau pixel. De plus, comparer avec 2 millions d'images serait extrêmement lent.",
+      "D": "BigQuery ML ne supporte pas nativement la recherche par similarité d'images. Il est conçu pour l'entraînement de modèles sur des données tabulaires, pas pour le serving de recherche visuelle."
+    },
+    gcpLink: "https://cloud.google.com/vertex-ai/docs/vector-search/overview"
+  },
+  {
+    id: 123,
+    domain: "Machine Learning et AI sur GCP",
+    difficulty: "intermédiaire",
+    question: "Votre équipe ML a entraîné 20 versions d'un modèle de prédiction au cours des 6 derniers mois, en testant différents hyperparamètres, features et datasets. Il est difficile de retrouver quelle combinaison a produit les meilleurs résultats. Comment gérez-vous le suivi des expériences ML de manière structurée ?",
+    options: [
+      { label: "A", text: "Enregistrer les résultats dans un Google Sheets partagé" },
+      { label: "B", text: "Utiliser Vertex AI Experiments pour tracker automatiquement les hyperparamètres, métriques, artefacts et lineage de chaque run" },
+      { label: "C", text: "Sauvegarder chaque modèle dans Cloud Storage avec un README décrivant les paramètres" },
+      { label: "D", text: "Utiliser les logs Cloud Logging pour retrouver les paramètres de chaque entraînement" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Vertex AI Experiments fournit un tracking structuré des expériences ML : chaque run enregistre automatiquement les hyperparamètres, les métriques de performance, les artefacts (datasets, modèles), et le lineage complet. L'interface permet de comparer visuellement les runs et d'identifier la meilleure combinaison.",
+    whyOthersWrong: {
+      "A": "Un Google Sheets est sujet aux erreurs de saisie, ne s'intègre pas avec les outils ML, ne track pas automatiquement les paramètres, et ne permet pas la reproductibilité.",
+      "C": "Des fichiers README dans Cloud Storage ne sont pas structurés, pas recherchables, et ne permettent pas la comparaison automatisée entre les modèles.",
+      "D": "Les logs Cloud Logging sont verbeux et non structurés pour le tracking ML. Retrouver les hyperparamètres dans des logs est fastidieux et ne permet pas la comparaison visuelle."
+    },
+    gcpLink: "https://cloud.google.com/vertex-ai/docs/experiments/intro"
+  },
+  {
+    id: 124,
+    domain: "Machine Learning et AI sur GCP",
+    difficulty: "difficile",
+    question: "Votre modèle de scoring crédit doit être conforme aux exigences réglementaires de transparence : chaque décision de refus de crédit doit être accompagnée d'une explication compréhensible par le client (ex: \"revenu insuffisant\", \"historique de crédit trop court\"). Le modèle est un gradient boosted tree entraîné avec BigQuery ML. Comment générez-vous ces explications ?",
+    options: [
+      { label: "A", text: "Ajouter un champ texte dans le modèle qui génère automatiquement une explication" },
+      { label: "B", text: "Utiliser la fonction ML.EXPLAIN_PREDICT de BigQuery ML qui retourne les feature attributions (contribution de chaque feature) pour chaque prédiction individuelle" },
+      { label: "C", text: "Entraîner un second modèle qui prédit les explications à partir des mêmes features" },
+      { label: "D", text: "Utiliser ML.GLOBAL_EXPLAIN pour obtenir l'importance globale des features et l'afficher pour chaque décision" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "ML.EXPLAIN_PREDICT de BigQuery ML calcule les feature attributions locales pour chaque prédiction : la contribution positive ou négative de chaque feature à la décision. Pour un refus, on peut identifier que 'revenu' a contribué négativement (-0.3) et 'historique_credit' aussi (-0.2), fournissant des explications individualisées conformes aux exigences réglementaires.",
+    whyOthersWrong: {
+      "A": "Les modèles de gradient boosted trees ne génèrent pas de texte. L'explication est dérivée de l'analyse des contributions des features, pas d'une génération textuelle.",
+      "C": "Un second modèle d'explication est complexe, fragile et peut être incohérent avec le modèle principal. ML.EXPLAIN_PREDICT est une méthode native et mathématiquement correcte.",
+      "D": "ML.GLOBAL_EXPLAIN donne l'importance moyenne des features sur l'ensemble du dataset, pas pour une décision individuelle. Un client a besoin de comprendre pourquoi son crédit a été refusé, pas quelles features sont importantes en général."
+    },
+    gcpLink: "https://cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-explain-predict"
+  },
+  {
+    id: 125,
+    domain: "Machine Learning et AI sur GCP",
+    difficulty: "difficile",
+    question: "Votre entreprise veut utiliser l'API Gemini pour générer des résumés automatiques de documents internes. Cependant, les documents contiennent parfois des informations incorrectes, et le modèle peut aussi halluciner des faits. Comment réduisez-vous les risques d'hallucinations et améliorez-vous la fiabilité des résumés générés ?",
+    options: [
+      { label: "A", text: "Augmenter la température du modèle pour obtenir des réponses plus créatives et complètes" },
+      { label: "B", text: "Utiliser le grounding de Vertex AI qui ancre les réponses dans les documents fournis et cite les sources, combiné avec un paramètre de température bas" },
+      { label: "C", text: "Fine-tuner le modèle Gemini sur les documents internes pour qu'il les mémorise" },
+      { label: "D", text: "Demander au modèle dans le prompt de ne pas halluciner" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Le grounding de Vertex AI force le modèle à baser ses réponses sur les documents fournis et à citer ses sources. Combiné avec une température basse (plus déterministe, moins créatif), les réponses sont factuellement ancrées dans le contenu réel. Le grounding permet aussi de vérifier la fidélité des réponses aux documents source.",
+    whyOthersWrong: {
+      "A": "Augmenter la température augmente la créativité et donc le risque d'hallucinations. Pour des résumés factuels, une température basse est recommandée.",
+      "C": "Le fine-tuning ne résout pas les hallucinations : le modèle peut toujours générer du contenu non présent dans les documents. Le fine-tuning est aussi coûteux et nécessite un processus de re-entraînement régulier.",
+      "D": "Demander au modèle de ne pas halluciner dans le prompt a un effet limité. Les LLM ne contrôlent pas fiablement leurs hallucinations par instruction. Le grounding est une solution technique, pas une solution textuelle."
+    },
+    gcpLink: "https://cloud.google.com/vertex-ai/generative-ai/docs/grounding/overview"
   }
 ];

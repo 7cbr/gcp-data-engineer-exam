@@ -338,5 +338,104 @@ export const domain3Questions: Question[] = [
       "D": "Datastream ne supporte pas Cloud Spanner comme source. Il est conçu pour les bases MySQL, PostgreSQL et Oracle."
     },
     gcpLink: "https://cloud.google.com/spanner/docs/change-streams"
+  },
+  {
+    id: 111,
+    domain: "Stockage des données",
+    difficulty: "facile",
+    question: "Votre équipe développe une application web qui utilise Cloud SQL PostgreSQL. Les lectures sont 10 fois plus fréquentes que les écritures. Les utilisateurs dans plusieurs régions européennes se plaignent de latences élevées. Comment améliorez-vous les performances de lecture sans modifier l'application ?",
+    options: [
+      { label: "A", text: "Augmenter la taille de l'instance Cloud SQL (scaling vertical)" },
+      { label: "B", text: "Créer des réplicas de lecture Cloud SQL dans les régions européennes concernées" },
+      { label: "C", text: "Migrer vers Cloud Spanner pour une distribution multi-régionale" },
+      { label: "D", text: "Activer le cache de requêtes PostgreSQL" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Les réplicas de lecture Cloud SQL permettent de distribuer les requêtes de lecture sur des instances secondaires dans d'autres régions, réduisant la latence pour les utilisateurs distants. L'application peut être configurée pour diriger les lectures vers le réplica le plus proche sans modification du code applicatif (via le proxy Cloud SQL).",
+    whyOthersWrong: {
+      "A": "Le scaling vertical améliore les performances globales mais ne résout pas la latence due à la distance géographique. Les utilisateurs loin de la région du serveur auront toujours une latence réseau élevée.",
+      "C": "Migrer vers Spanner est une refonte majeure qui n'est pas nécessaire. Cloud SQL avec réplicas de lecture suffit pour ce cas d'usage et est beaucoup moins coûteux.",
+      "D": "Le cache de requêtes PostgreSQL aide pour les requêtes répétitives identiques mais ne résout pas la latence géographique. De plus, il est désactivé par défaut dans les versions récentes de PostgreSQL."
+    },
+    gcpLink: "https://cloud.google.com/sql/docs/postgres/replication"
+  },
+  {
+    id: 112,
+    domain: "Stockage des données",
+    difficulty: "intermédiaire",
+    question: "Votre table BigQuery de 10 To contient des données de logs avec un champ 'timestamp' et un champ 'severity' (INFO, WARNING, ERROR, CRITICAL). 95% des requêtes filtrent par timestamp ET severity. La table est déjà partitionnée par timestamp (jour). Les requêtes filtrées par severity='ERROR' scannent encore trop de données. Quelle optimisation appliquez-vous ?",
+    options: [
+      { label: "A", text: "Ajouter un clustering sur la colonne severity" },
+      { label: "B", text: "Créer une table séparée pour chaque niveau de severity" },
+      { label: "C", text: "Partitionner par severity au lieu de timestamp" },
+      { label: "D", text: "Créer un index B-tree sur severity" }
+    ],
+    correctAnswers: ["A"],
+    explanation: "Le clustering BigQuery trie physiquement les données à l'intérieur de chaque partition selon les colonnes spécifiées. En ajoutant un clustering sur severity, BigQuery peut éliminer les blocs de données qui ne correspondent pas au filtre severity='ERROR', réduisant drastiquement le volume scanné dans chaque partition journalière.",
+    whyOthersWrong: {
+      "B": "Créer des tables séparées par severity complexifie les requêtes cross-severity, augmente la maintenance, et perd la flexibilité du clustering qui gère ce cas nativement.",
+      "C": "Partitionner par severity créerait seulement 4 partitions (INFO, WARNING, ERROR, CRITICAL), perdant l'avantage du partitionnement par timestamp qui est le filtre principal. On ne peut pas partitionner sur deux colonnes.",
+      "D": "BigQuery ne supporte pas les index B-tree. Le partitionnement et le clustering sont les mécanismes d'optimisation natifs de BigQuery."
+    },
+    gcpLink: "https://cloud.google.com/bigquery/docs/clustered-tables"
+  },
+  {
+    id: 113,
+    domain: "Stockage des données",
+    difficulty: "difficile",
+    question: "Votre entreprise gère un catalogue produit de 50 millions de références avec des recherches full-text, des filtres à facettes (catégorie, prix, marque) et un tri par pertinence. La latence de recherche doit être inférieure à 100 ms. Les données sont actuellement dans BigQuery. Quel service de stockage est le plus adapté pour servir ces recherches ?",
+    options: [
+      { label: "A", text: "BigQuery avec des requêtes LIKE et ORDER BY pour la recherche" },
+      { label: "B", text: "Cloud SQL PostgreSQL avec l'extension full-text search (tsvector)" },
+      { label: "C", text: "Vertex AI Vector Search pour la recherche sémantique" },
+      { label: "D", text: "Elasticsearch déployé sur GKE ou Elastic Cloud sur GCP" }
+    ],
+    correctAnswers: ["D"],
+    explanation: "Elasticsearch est le moteur de recherche le plus adapté pour le full-text search avec facettes et tri par pertinence à faible latence. Déployé sur GKE ou via Elastic Cloud (partenaire GCP), il gère efficacement 50 millions de documents avec des recherches en < 100 ms, le scoring de pertinence et les agrégations pour les facettes.",
+    whyOthersWrong: {
+      "A": "BigQuery n'est pas conçu pour la recherche full-text à faible latence. Les requêtes LIKE scannent les données sans index de recherche, et la latence dépasse largement 100 ms.",
+      "B": "PostgreSQL avec tsvector fonctionne pour des volumes modérés mais 50 millions de références avec des facettes complexes et une latence < 100 ms dépassent ses capacités optimales.",
+      "C": "Vertex AI Vector Search est conçu pour la recherche sémantique par similarité vectorielle, pas pour le full-text search avec facettes et filtres structurés."
+    }
+  },
+  {
+    id: 114,
+    domain: "Stockage des données",
+    difficulty: "intermédiaire",
+    question: "Votre bucket Cloud Storage contient des données critiques. Un stagiaire supprime accidentellement un dossier contenant 10 000 fichiers importants. Vous devez restaurer les fichiers. Quelle fonctionnalité aurait dû être activée pour prévenir ce scénario ?",
+    options: [
+      { label: "A", text: "Le versioning des objets Cloud Storage qui conserve les anciennes versions des objets supprimés ou écrasés" },
+      { label: "B", text: "Les Access Control Lists (ACL) pour empêcher la suppression" },
+      { label: "C", text: "La réplication multi-régionale du bucket" },
+      { label: "D", text: "Le chiffrement CMEK des objets" }
+    ],
+    correctAnswers: ["A"],
+    explanation: "Le versioning des objets Cloud Storage conserve automatiquement toutes les versions précédentes des objets, y compris les objets supprimés. Avec le versioning activé, une suppression crée simplement une version marquée comme supprimée, et les versions précédentes restent accessibles pour restauration. Combiné avec des politiques de cycle de vie pour gérer les anciennes versions, c'est la protection standard contre les suppressions accidentelles.",
+    whyOthersWrong: {
+      "B": "Les ACL contrôlent qui peut accéder aux objets mais ne protègent pas contre la suppression par un utilisateur autorisé (le stagiaire avait les permissions nécessaires).",
+      "C": "La réplication multi-régionale assure la durabilité contre les pannes de datacenter mais réplique aussi les suppressions. Si un fichier est supprimé, la suppression est répliquée dans toutes les régions.",
+      "D": "Le chiffrement CMEK protège la confidentialité des données mais ne prévient pas les suppressions accidentelles."
+    },
+    gcpLink: "https://cloud.google.com/storage/docs/object-versioning"
+  },
+  {
+    id: 115,
+    domain: "Stockage des données",
+    difficulty: "difficile",
+    question: "Votre entreprise utilise BigQuery et souhaite optimiser les coûts des requêtes récurrentes. Un rapport exécuté 50 fois par jour par différents utilisateurs agrège les ventes par région et par jour sur les 7 derniers jours. Les données source sont mises à jour toutes les heures. Quelle fonctionnalité BigQuery est la plus adaptée pour optimiser ce cas d'usage ?",
+    options: [
+      { label: "A", text: "Le cache de résultats BigQuery qui réutilise automatiquement les résultats identiques" },
+      { label: "B", text: "Une vue matérialisée qui pré-calcule l'agrégation et est automatiquement rafraîchie par BigQuery lors des modifications des données source" },
+      { label: "C", text: "Une table planifiée (scheduled query) qui recalcule les résultats toutes les heures" },
+      { label: "D", text: "Exporter les résultats dans Memorystore Redis pour un accès rapide" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Les vues matérialisées BigQuery pré-calculent et stockent les résultats des agrégations. BigQuery les maintient automatiquement à jour lorsque les données source changent, de manière incrémentale (sans recalcul complet). Les requêtes qui matchent la vue sont automatiquement redirigées vers la vue matérialisée, réduisant les coûts et la latence pour les 50 exécutions quotidiennes.",
+    whyOthersWrong: {
+      "A": "Le cache de résultats ne fonctionne que pour des requêtes strictement identiques et est invalidé à chaque modification des données source (ici toutes les heures). Avec des filtres de date glissants, le cache est rarement utilisable.",
+      "C": "Une requête planifiée recalcule les résultats à intervalle fixe mais ne se met pas à jour automatiquement entre les exécutions. Elle crée aussi une table séparée qui nécessite des modifications des requêtes des utilisateurs.",
+      "D": "Exporter vers Redis ajoute un composant d'infrastructure à gérer, nécessite un mécanisme de rafraîchissement, et perd les avantages natifs de BigQuery (SQL, contrôle d'accès, monitoring)."
+    },
+    gcpLink: "https://cloud.google.com/bigquery/docs/materialized-views-intro"
   }
 ];

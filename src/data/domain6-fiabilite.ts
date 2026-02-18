@@ -319,5 +319,104 @@ export const domain6Questions: Question[] = [
       "D": "Cloud Logging seul ne fournit pas de dashboards de métriques, d'alertes proactives basées sur des seuils, ni de data lineage. Les logs sont un composant de l'observability, pas une solution complète."
     },
     gcpLink: "https://cloud.google.com/monitoring/docs/monitoring-overview"
+  },
+  {
+    id: 126,
+    domain: "Fiabilité, monitoring et optimisation des pipelines",
+    difficulty: "facile",
+    question: "Votre équipe reçoit trop d'alertes Cloud Monitoring pour les pipelines de données (plus de 100 alertes par jour), dont la plupart sont des faux positifs. Les vrais incidents sont noyés dans le bruit. Comment améliorez-vous la qualité des alertes ?",
+    options: [
+      { label: "A", text: "Désactiver toutes les alertes et ne surveiller que le tableau de bord manuellement" },
+      { label: "B", text: "Configurer des alertes multi-conditions (MQL) avec des seuils adaptés, des fenêtres de durée pour éviter les pics transitoires, et des politiques de notification avec escalade" },
+      { label: "C", text: "Augmenter les seuils d'alerte pour réduire le nombre de notifications" },
+      { label: "D", text: "Rediriger toutes les alertes vers un channel Slack dédié pour mieux les trier" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Les alertes multi-conditions dans Cloud Monitoring permettent de combiner plusieurs métriques (ex: latence élevée ET débit en baisse) pour réduire les faux positifs. Les fenêtres de durée (ex: alerte seulement si la condition persiste pendant 5 minutes) éliminent les pics transitoires. Les politiques d'escalade garantissent que les vrais incidents sont traités.",
+    whyOthersWrong: {
+      "A": "Désactiver les alertes et surveiller manuellement est réactif et ne fonctionne pas hors des heures de bureau. C'est l'opposé d'un monitoring proactif.",
+      "C": "Augmenter les seuils uniformément réduit les alertes mais risque aussi de manquer des vrais incidents. Les seuils doivent être adaptés au contexte de chaque métrique, pas uniformément relevés.",
+      "D": "Rediriger vers Slack change le canal de notification mais ne résout pas le problème fondamental : trop d'alertes non pertinentes. Le bruit reste le même, juste dans un autre outil."
+    },
+    gcpLink: "https://cloud.google.com/monitoring/alerts/concepts-indepth"
+  },
+  {
+    id: 127,
+    domain: "Fiabilité, monitoring et optimisation des pipelines",
+    difficulty: "intermédiaire",
+    question: "Votre entreprise utilise BigQuery avec la tarification à la demande (on-demand). La facture mensuelle est de 20 000 $ et augmente chaque mois. Vous devez comprendre quels utilisateurs, requêtes et datasets consomment le plus. Quel outil natif BigQuery vous donne cette visibilité ?",
+    options: [
+      { label: "A", text: "Cloud Billing pour voir le coût global de BigQuery" },
+      { label: "B", text: "La vue INFORMATION_SCHEMA.JOBS qui contient le détail de chaque requête exécutée : utilisateur, bytes scannés, durée, coût estimé" },
+      { label: "C", text: "Cloud Monitoring avec les métriques BigQuery" },
+      { label: "D", text: "Les Audit Logs de BigQuery" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "La vue INFORMATION_SCHEMA.JOBS dans BigQuery contient l'historique complet de toutes les requêtes exécutées : utilisateur, bytes scannés (qui détermine le coût en on-demand), durée, type de requête, et tables accédées. Vous pouvez écrire des requêtes SQL sur cette vue pour identifier les top consommateurs et les requêtes les plus coûteuses.",
+    whyOthersWrong: {
+      "A": "Cloud Billing donne le coût total de BigQuery par projet mais ne détaille pas les coûts par utilisateur, par requête ou par dataset. La granularité est insuffisante pour l'analyse.",
+      "C": "Cloud Monitoring fournit des métriques agrégées (slots utilisés, requêtes par seconde) mais pas le détail par requête individuelle ni les bytes scannés par utilisateur.",
+      "D": "Les Audit Logs enregistrent les accès mais ne contiennent pas les métriques de consommation (bytes scannés, coût) aussi facilement que INFORMATION_SCHEMA.JOBS."
+    },
+    gcpLink: "https://cloud.google.com/bigquery/docs/information-schema-jobs"
+  },
+  {
+    id: 128,
+    domain: "Fiabilité, monitoring et optimisation des pipelines",
+    difficulty: "intermédiaire",
+    question: "Votre pipeline Dataflow streaming fonctionne depuis 3 mois mais vous observez une augmentation progressive de la latence (system lag) qui est passée de 2 secondes à 30 secondes. Le volume de données n'a pas changé. Quelle est la cause la plus probable et comment la diagnostiquez-vous ?",
+    options: [
+      { label: "A", text: "Les workers Dataflow ont besoin d'être redémarrés périodiquement pour libérer la mémoire" },
+      { label: "B", text: "Un data skew progressif ou une accumulation d'état (state) dans les fenêtres ou les timers. Diagnostiquer via les métriques Dataflow : vérifier la distribution de la charge entre workers et la taille du state par clé" },
+      { label: "C", text: "Pub/Sub ralentit car le topic est trop ancien" },
+      { label: "D", text: "BigQuery limite le débit d'écriture en streaming après 3 mois d'utilisation continue" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Une dégradation progressive de la latence sans changement de volume indique typiquement une accumulation d'état (state bloat) dans les fenêtres, les timers ou les compteurs distribués, ou un data skew qui s'aggrave. Les métriques Dataflow montrent la taille de l'état par étape et la distribution de la charge entre workers, permettant d'identifier la cause racine.",
+    whyOthersWrong: {
+      "A": "Dataflow gère automatiquement la mémoire des workers et ne nécessite pas de redémarrage périodique. Si un worker manque de mémoire, Dataflow le signale via des métriques et des logs spécifiques.",
+      "C": "Pub/Sub ne ralentit pas en fonction de l'âge d'un topic. Ses performances sont constantes indépendamment de la durée de vie du topic.",
+      "D": "BigQuery n'a pas de limite de débit qui se déclenche après une durée d'utilisation. Les limites sont basées sur le volume instantané, pas sur la durée."
+    },
+    gcpLink: "https://cloud.google.com/dataflow/docs/guides/troubleshoot-streaming-stragglers"
+  },
+  {
+    id: 129,
+    domain: "Fiabilité, monitoring et optimisation des pipelines",
+    difficulty: "difficile",
+    question: "Votre équipe gère 30 pipelines de données orchestrés par Cloud Composer. Un pipeline critique échoue car une table BigQuery source a été supprimée par une autre équipe sans prévenir. Vous voulez implémenter des contrôles de pré-exécution pour vérifier les prérequis avant chaque pipeline. Quelle approche est la plus robuste dans Cloud Composer ?",
+    options: [
+      { label: "A", text: "Ajouter un opérateur BigQueryCheckOperator (sensor) au début de chaque DAG qui vérifie l'existence des tables et la fraîcheur des données avant de lancer le pipeline" },
+      { label: "B", text: "Vérifier manuellement les tables source chaque matin avant de lancer les pipelines" },
+      { label: "C", text: "Augmenter le nombre de retries du DAG pour retraiter en cas d'échec" },
+      { label: "D", text: "Créer un DAG séparé qui exécute toutes les vérifications et envoie un email de confirmation" }
+    ],
+    correctAnswers: ["A"],
+    explanation: "Les sensors BigQuery dans Apache Airflow (BigQueryTableExistenceSensor, BigQueryCheckOperator) vérifient automatiquement les prérequis avant l'exécution du pipeline : existence des tables, fraîcheur des données (dernière partition disponible), et conditions de qualité. Si un prérequis n'est pas rempli, le DAG attend ou échoue proprement avec un message explicite.",
+    whyOthersWrong: {
+      "B": "La vérification manuelle est sujette aux erreurs humaines, ne fonctionne pas la nuit ni le week-end, et ne scale pas pour 30 pipelines.",
+      "C": "Les retries ne résolvent pas le problème : si la table a été supprimée, les retries échoueront indéfiniment. Les sensors détectent le problème immédiatement et alertent l'équipe.",
+      "D": "Un DAG séparé découple la vérification de l'exécution, créant un risque de condition de course (la table peut être supprimée entre la vérification et l'exécution). Les sensors intégrés au DAG sont atomiques."
+    },
+    gcpLink: "https://cloud.google.com/composer/docs/composer-2/use-bigquery-operators"
+  },
+  {
+    id: 130,
+    domain: "Fiabilité, monitoring et optimisation des pipelines",
+    difficulty: "difficile",
+    question: "Votre entreprise doit tester ses pipelines de données avant chaque déploiement en production. Les pipelines utilisent Dataflow, BigQuery et Pub/Sub. Vous voulez implémenter une stratégie de test complète. Quels types de tests sont les plus importants pour un pipeline de données ? (Sélectionnez 2 réponses)",
+    options: [
+      { label: "A", text: "Tests unitaires des transformations avec DirectRunner (exécution locale) et des données synthétiques qui valident la logique métier de chaque étape" },
+      { label: "B", text: "Tests d'intégration de bout en bout dans un projet GCP de staging avec des données de test qui vérifient le pipeline complet (Pub/Sub → Dataflow → BigQuery)" },
+      { label: "C", text: "Tests de charge en production avec le trafic réel pour vérifier les performances" },
+      { label: "D", text: "Revue de code uniquement, sans exécution de tests automatisés" }
+    ],
+    correctAnswers: ["A", "B"],
+    explanation: "Les tests unitaires avec DirectRunner valident la logique de transformation de chaque étape rapidement et sans coût d'infrastructure. Les tests d'intégration dans un projet staging vérifient le fonctionnement de bout en bout avec les services réels (connectivité, permissions, schémas). Ces deux niveaux combinés détectent la majorité des bugs avant la production.",
+    whyOthersWrong: {
+      "C": "Les tests de charge en production risquent d'impacter les utilisateurs et les données réelles. Les tests de performance doivent être effectués dans un environnement de staging avec des données synthétiques ou anonymisées.",
+      "D": "La revue de code est nécessaire mais insuffisante seule. Elle ne détecte pas les bugs de logique complexe, les problèmes de compatibilité de schéma ni les erreurs de configuration des services GCP."
+    },
+    gcpLink: "https://beam.apache.org/documentation/pipelines/test-your-pipeline/"
   }
 ];

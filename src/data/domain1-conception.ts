@@ -338,5 +338,105 @@ export const domain1Questions: Question[] = [
       "D": "Cloud Spanner multi-régional EU ne garantit pas la résidence exclusive en France (europe-west9). Les données pourraient être répliquées dans d'autres pays de l'UE, ce qui peut ne pas satisfaire les exigences réglementaires françaises spécifiques."
     },
     gcpLink: "https://cloud.google.com/healthcare-api/docs/concepts/fhir"
+  },
+  {
+    id: 101,
+    domain: "Conception de systèmes de traitement de données",
+    difficulty: "intermédiaire",
+    question: "Votre entreprise adopte une architecture data mesh. Chaque équipe métier (marketing, finance, produit) doit être propriétaire de ses données et les exposer comme des produits de données accessibles aux autres équipes. Quelle combinaison de services GCP supporte le mieux cette approche ?",
+    options: [
+      { label: "A", text: "Un projet BigQuery central géré par l'équipe data, avec des vues pour chaque équipe métier" },
+      { label: "B", text: "Un projet GCP par domaine métier avec Dataplex pour la gouvernance fédérée, Analytics Hub pour le partage de données, et Data Catalog pour la découvrabilité" },
+      { label: "C", text: "Cloud Storage partagé entre toutes les équipes avec des conventions de nommage par domaine" },
+      { label: "D", text: "Un data lake centralisé sur Dataproc avec Apache Hive pour l'accès SQL" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Le data mesh repose sur la décentralisation de la propriété des données. Un projet par domaine donne l'autonomie aux équipes. Dataplex fournit une gouvernance fédérée sans centraliser les données. Analytics Hub permet de partager des datasets comme des produits de données. Data Catalog assure la découvrabilité transversale.",
+    whyOthersWrong: {
+      "A": "Un projet central contredit le principe fondamental du data mesh : la propriété décentralisée des données par les équipes métier.",
+      "C": "Cloud Storage avec des conventions de nommage n'offre aucune gouvernance, pas de contrôle d'accès granulaire par domaine, ni de fonctionnalités de découverte de données.",
+      "D": "Un data lake centralisé sur Dataproc est l'opposé du data mesh. C'est une architecture monolithique avec un point unique de gestion."
+    },
+    gcpLink: "https://cloud.google.com/dataplex/docs/overview"
+  },
+  {
+    id: 102,
+    domain: "Conception de systèmes de traitement de données",
+    difficulty: "difficile",
+    question: "Vous concevez une architecture événementielle (event-driven) pour une place de marché en ligne. Les événements incluent : commandes créées, paiements validés, articles expédiés. Chaque événement doit déclencher plusieurs actions indépendantes (notification client, mise à jour du stock, mise à jour du tableau de bord analytique). L'ordre des événements par commande doit être préservé. Quelle architecture est la plus adaptée ?",
+    options: [
+      { label: "A", text: "Pub/Sub avec un topic par type d'événement, un abonnement par consommateur, et un ordering key basé sur l'identifiant de commande" },
+      { label: "B", text: "Cloud Tasks avec des files d'attente séparées pour chaque action" },
+      { label: "C", text: "Eventarc déclenchant des Cloud Functions séquentielles pour chaque action" },
+      { label: "D", text: "Un seul pipeline Dataflow qui traite tous les événements et exécute toutes les actions" }
+    ],
+    correctAnswers: ["A"],
+    explanation: "Pub/Sub avec des ordering keys garantit l'ordre de livraison des messages ayant la même clé (identifiant de commande). Un topic par type d'événement organise les flux. Plusieurs abonnements sur le même topic permettent à chaque consommateur (notification, stock, analytics) de traiter les événements indépendamment, assurant le découplage.",
+    whyOthersWrong: {
+      "B": "Cloud Tasks est conçu pour l'exécution asynchrone de tâches ciblées, pas pour le fan-out d'événements vers plusieurs consommateurs. Il ne supporte pas nativement le pattern publish-subscribe.",
+      "C": "Eventarc avec des Cloud Functions séquentielles crée un couplage fort entre les actions. Si une action échoue, les suivantes sont bloquées. Le fan-out indépendant de Pub/Sub est préférable.",
+      "D": "Un seul pipeline Dataflow pour toutes les actions crée un monolithe. Une panne dans la logique de notification impacterait la mise à jour du stock et l'analytique."
+    },
+    gcpLink: "https://cloud.google.com/pubsub/docs/ordering"
+  },
+  {
+    id: 103,
+    domain: "Conception de systèmes de traitement de données",
+    difficulty: "facile",
+    question: "Votre entreprise utilise un serveur FTP on-premise pour recevoir des fichiers de partenaires. Vous devez migrer ce processus vers GCP en permettant aux partenaires de déposer des fichiers de manière sécurisée sans modifier leurs outils existants. Quel service GCP est le plus adapté ?",
+    options: [
+      { label: "A", text: "Cloud Storage avec des URL signées partagées par email" },
+      { label: "B", text: "Storage Transfer Service configuré pour récupérer les fichiers du FTP" },
+      { label: "C", text: "Compute Engine avec un serveur FTP installé manuellement" },
+      { label: "D", text: "Cloud Storage avec un connecteur SFTP managé via Transfer Service for On Premises Data" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Storage Transfer Service peut être configuré pour récupérer des fichiers depuis des sources HTTP/HTTPS et des systèmes de fichiers. Pour les partenaires existants utilisant FTP/SFTP, il permet d'automatiser le transfert vers Cloud Storage de manière sécurisée et planifiée, sans que les partenaires changent leurs outils.",
+    whyOthersWrong: {
+      "A": "Les URL signées ont une durée de validité limitée et nécessitent que les partenaires utilisent des outils HTTP au lieu de FTP, ce qui ne respecte pas la contrainte de ne pas modifier leurs outils.",
+      "C": "Installer un serveur FTP manuellement sur Compute Engine nécessite de gérer la sécurité, les mises à jour, le scaling et la haute disponibilité. Ce n'est pas une solution managée.",
+      "D": "Transfer Service for On Premises Data est conçu pour les transferts de données depuis des serveurs on-premise de l'entreprise vers GCP, pas pour recevoir des fichiers de partenaires externes."
+    },
+    gcpLink: "https://cloud.google.com/storage-transfer/docs/overview"
+  },
+  {
+    id: 104,
+    domain: "Conception de systèmes de traitement de données",
+    difficulty: "intermédiaire",
+    question: "Une entreprise d'assurance doit concevoir un système qui reçoit des demandes de sinistres sous forme de documents PDF (photos, formulaires) et doit automatiquement extraire les informations clés, les classifier par type de sinistre, et stocker les données structurées pour le traitement. Quelle architecture recommandez-vous ?",
+    options: [
+      { label: "A", text: "Cloud Storage → Cloud Vision OCR → Cloud Functions pour le parsing → Cloud SQL" },
+      { label: "B", text: "Cloud Storage → Document AI (processeur custom) → Pub/Sub → Dataflow pour l'enrichissement → BigQuery" },
+      { label: "C", text: "Cloud Storage → Vertex AI custom model pour l'extraction → Firestore" },
+      { label: "D", text: "Cloud Storage → téléchargement manuel par un opérateur → saisie dans un formulaire web" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Document AI permet d'entraîner des processeurs custom pour extraire des champs spécifiques de documents métier (formulaires de sinistres). Pub/Sub découple l'extraction du traitement en aval. Dataflow enrichit et valide les données. BigQuery permet l'analyse des sinistres à grande échelle. Cette architecture est scalable et entièrement automatisée.",
+    whyOthersWrong: {
+      "A": "Cloud Vision OCR extrait du texte brut mais ne comprend pas la structure des formulaires de sinistres. Le parsing custom dans Cloud Functions serait fragile et difficile à maintenir.",
+      "C": "Un modèle custom Vertex AI nécessite beaucoup plus d'effort de développement que Document AI qui est spécifiquement conçu pour l'extraction de documents. Firestore n'est pas optimal pour l'analyse à grande échelle.",
+      "D": "Le traitement manuel ne scale pas, est sujet aux erreurs et ne répond pas au besoin d'automatisation."
+    },
+    gcpLink: "https://cloud.google.com/document-ai/docs/overview"
+  },
+  {
+    id: 105,
+    domain: "Conception de systèmes de traitement de données",
+    difficulty: "difficile",
+    question: "Vous concevez l'architecture de données d'une application de covoiturage. Le système doit gérer simultanément : la mise en correspondance conducteurs-passagers en temps réel (latence < 500 ms), le calcul du prix dynamique basé sur l'offre et la demande, et la génération de rapports analytiques quotidiens pour les opérations. Quelle architecture est la plus adaptée ?",
+    options: [
+      { label: "A", text: "Tout dans BigQuery avec des requêtes en streaming pour le matching temps réel" },
+      { label: "B", text: "Pub/Sub pour les événements temps réel → Dataflow pour le matching et le pricing dynamique avec état dans Bigtable → BigQuery pour l'analytique via un export Dataflow séparé" },
+      { label: "C", text: "Cloud SQL PostgreSQL pour tout : transactions, matching et rapports" },
+      { label: "D", text: "Firebase Realtime Database pour le matching → Cloud Functions pour le pricing → BigQuery pour l'analytique" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Pub/Sub ingère les positions GPS et demandes en temps réel. Dataflow en streaming effectue le matching conducteur-passager et le calcul de prix dynamique avec un accès état dans Bigtable pour les lookups à faible latence (positions, profils, zones de demande). Un second pipeline Dataflow exporte les données vers BigQuery pour l'analytique. Cette séparation des concerns optimise chaque composant pour son usage.",
+    whyOthersWrong: {
+      "A": "BigQuery a une latence de plusieurs secondes par requête, incompatible avec le matching temps réel en < 500 ms. BigQuery est conçu pour l'analytique, pas le traitement transactionnel.",
+      "C": "Cloud SQL ne peut pas gérer la charge de milliers de positions GPS par seconde, le matching en temps réel et les rapports analytiques simultanément. Il n'est pas conçu pour ce niveau de concurrence.",
+      "D": "Firebase Realtime Database a des limites de débit pour le volume de données d'une application de covoiturage à grande échelle. Cloud Functions avec cold starts ne garantit pas la latence < 500 ms pour le pricing."
+    },
+    gcpLink: "https://cloud.google.com/architecture/real-time-intelligence"
   }
 ];

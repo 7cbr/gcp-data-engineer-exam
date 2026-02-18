@@ -4,9 +4,11 @@ interface StartScreenProps {
   onStart: () => void;
   totalQuestions: number;
   quizSize: number;
+  sizeOptions: number[];
+  onSizeChange: (size: number) => void;
 }
 
-export function StartScreen({ onStart, totalQuestions, quizSize }: StartScreenProps) {
+export function StartScreen({ onStart, totalQuestions, quizSize, sizeOptions, onSizeChange }: StartScreenProps) {
   return (
     <div className="animate-fade-in">
       {/* Hero */}
@@ -32,6 +34,26 @@ export function StartScreen({ onStart, totalQuestions, quizSize }: StartScreenPr
         <div className="glass rounded-xl p-4">
           <div className="text-2xl font-bold text-gcp-green mb-1">6</div>
           <div className="text-sm text-white/50">Domaines couverts</div>
+        </div>
+      </div>
+
+      {/* Quiz size selector */}
+      <div className="mb-8">
+        <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider mb-3">Nombre de questions</h3>
+        <div className="flex flex-wrap gap-2">
+          {sizeOptions.map((size) => (
+            <button
+              key={size}
+              onClick={() => onSizeChange(size)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
+                size === quizSize
+                  ? 'bg-gcp-blue text-white shadow-lg shadow-gcp-blue/25'
+                  : 'glass text-white/60 hover:text-white/80 hover:bg-white/10'
+              }`}
+            >
+              {size}
+            </button>
+          ))}
         </div>
       </div>
 
