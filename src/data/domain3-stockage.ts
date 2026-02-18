@@ -1,4 +1,4 @@
-import { Question } from './types';
+import type { Question } from './types';
 
 export const domain3Questions: Question[] = [
   {
@@ -159,5 +159,184 @@ export const domain3Questions: Question[] = [
       "D": "Dupliquer les informations de transaction pour chaque article gaspille du stockage et complique les agrégations au niveau transaction."
     },
     gcpLink: "https://cloud.google.com/bigquery/docs/nested-repeated"
+  },
+  {
+    id: 67,
+    domain: "Stockage des données",
+    difficulty: "facile",
+    question: "Votre application web doit stocker des sessions utilisateur avec une expiration automatique après 30 minutes d'inactivité. Les données de session sont de petite taille (quelques Ko) et doivent être accessibles en moins de 5 ms. Quel service GCP est le plus adapté ?",
+    options: [
+      { label: "A", text: "Cloud Firestore" },
+      { label: "B", text: "Cloud Memorystore (Redis)" },
+      { label: "C", text: "Cloud Bigtable" },
+      { label: "D", text: "Cloud SQL" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Cloud Memorystore (Redis) est un cache en mémoire managé offrant des latences sub-milliseconde. Redis supporte nativement l'expiration automatique des clés (TTL), ce qui est parfait pour les sessions avec expiration après 30 minutes d'inactivité. Pour de petites données de session, c'est la solution la plus performante.",
+    whyOthersWrong: {
+      "A": "Firestore offre des latences de l'ordre de 10-50 ms, supérieures à l'exigence de 5 ms. De plus, l'expiration automatique des documents n'est pas une fonctionnalité native simple de Firestore.",
+      "C": "Bigtable est conçu pour les charges de travail analytiques à grande échelle, pas pour le stockage de petites données de session. C'est surqualifié et plus coûteux pour ce cas d'usage.",
+      "D": "Cloud SQL a une latence plus élevée que Redis pour les lectures simples et ne supporte pas nativement l'expiration automatique des lignes."
+    },
+    gcpLink: "https://cloud.google.com/memorystore/docs/redis/redis-overview"
+  },
+  {
+    id: 68,
+    domain: "Stockage des données",
+    difficulty: "intermédiaire",
+    question: "Votre entreprise stocke 500 To de données dans BigQuery. Les données de plus de 90 jours ne sont quasiment jamais requêtées mais doivent rester accessibles en SQL pour des audits ponctuels. Comment optimiser les coûts de stockage sans perdre l'accès SQL ?",
+    options: [
+      { label: "A", text: "Exporter les données anciennes vers Cloud Storage en Parquet et les supprimer de BigQuery" },
+      { label: "B", text: "Ne rien faire : BigQuery applique automatiquement un tarif de stockage long-terme réduit pour les données non modifiées depuis 90 jours" },
+      { label: "C", text: "Compresser les tables BigQuery anciennes pour réduire le volume" },
+      { label: "D", text: "Migrer les données anciennes vers Bigtable pour un stockage moins cher" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "BigQuery applique automatiquement un tarif de stockage long-terme (environ 50% moins cher) aux tables et partitions qui n'ont pas été modifiées depuis 90 jours. Les données restent pleinement accessibles en SQL sans aucune action de votre part. Si une table est modifiée, elle repasse temporairement au tarif standard.",
+    whyOthersWrong: {
+      "A": "Exporter vers Cloud Storage fait perdre l'accès SQL natif BigQuery. Les requêtes sur des fichiers Parquet externes sont moins performantes et nécessitent des tables externes ou BigLake.",
+      "C": "BigQuery utilise déjà un format de stockage compressé en interne (Capacitor). Il n'est pas possible de compresser davantage les tables manuellement.",
+      "D": "Bigtable n'est pas moins cher que le stockage long-terme de BigQuery et ne supporte pas les requêtes SQL. Cette migration perdrait la fonctionnalité d'audit SQL."
+    },
+    gcpLink: "https://cloud.google.com/bigquery/pricing#storage"
+  },
+  {
+    id: 69,
+    domain: "Stockage des données",
+    difficulty: "intermédiaire",
+    question: "Votre équipe de data science a besoin d'un espace de stockage partagé NFS accessible depuis plusieurs VMs Compute Engine et des notebooks Vertex AI Workbench simultanément. Les données incluent des datasets de 2 To au format HDF5 qui nécessitent un accès aléatoire rapide. Quel service de stockage est le plus adapté ?",
+    options: [
+      { label: "A", text: "Cloud Storage avec FUSE (gcsfuse)" },
+      { label: "B", text: "Cloud Filestore (tier Enterprise)" },
+      { label: "C", text: "Persistent Disk SSD partagé entre les VMs" },
+      { label: "D", text: "Cloud Storage classe Standard avec des copies locales sur chaque VM" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Cloud Filestore fournit un système de fichiers NFS managé haute performance, accessible simultanément depuis plusieurs VMs et notebooks. Le tier Enterprise offre les IOPS et le débit nécessaires pour un accès aléatoire rapide aux fichiers HDF5 volumineux, avec la cohérence d'un vrai système de fichiers POSIX.",
+    whyOthersWrong: {
+      "A": "gcsfuse monte Cloud Storage comme un système de fichiers mais avec des limitations de performance significatives pour l'accès aléatoire (latence élevée, pas de POSIX complet). Les fichiers HDF5 avec accès aléatoire seraient très lents.",
+      "C": "Un Persistent Disk ne peut être attaché en lecture-écriture qu'à une seule VM. Le mode multi-writer est limité et ne supporte pas les accès NFS standards depuis des notebooks Vertex AI.",
+      "D": "Copier 2 To sur chaque VM gaspille du stockage, crée des problèmes de synchronisation entre les copies, et ne permet pas le travail collaboratif sur les mêmes fichiers."
+    },
+    gcpLink: "https://cloud.google.com/filestore/docs/overview"
+  },
+  {
+    id: 70,
+    domain: "Stockage des données",
+    difficulty: "difficile",
+    question: "Vous devez concevoir la stratégie de partitionnement d'une table BigQuery de logs applicatifs qui reçoit 10 milliards de lignes par jour. Les requêtes filtrent principalement par timestamp et par application_name (50 applications différentes). La rétention est de 1 an. Quelle stratégie de partitionnement et clustering est optimale ?",
+    options: [
+      { label: "A", text: "Partitionnement par timestamp (granularité horaire) et clustering par application_name" },
+      { label: "B", text: "Partitionnement par application_name et clustering par timestamp" },
+      { label: "C", text: "Partitionnement par timestamp (granularité journalière) et clustering par application_name, avec une date d'expiration de partition de 365 jours" },
+      { label: "D", text: "Pas de partitionnement, uniquement du clustering par timestamp et application_name" }
+    ],
+    correctAnswers: ["C"],
+    explanation: "Le partitionnement journalier par timestamp est idéal car il correspond au pattern de requête principal et crée 365 partitions (bien sous la limite de 4 000). Le clustering par application_name optimise les requêtes filtrées par application dans chaque partition. L'expiration de partition à 365 jours gère automatiquement la rétention sans maintenance.",
+    whyOthersWrong: {
+      "A": "Le partitionnement horaire créerait 8 760 partitions par an (24h x 365j), dépassant la limite de 4 000 partitions de BigQuery. La granularité horaire est trop fine pour cette rétention.",
+      "B": "Partitionner par application_name (50 valeurs) est possible mais les requêtes filtrant par timestamp devront scanner toutes les 50 partitions. Le timestamp est un meilleur candidat au partitionnement car il a une cardinalité plus élevée et est le filtre principal.",
+      "D": "Sans partitionnement, chaque requête scanne l'intégralité de la table (10 milliards x 365 = 3 650 milliards de lignes). Le clustering seul ne peut pas éviter le scan de toutes les données sans partitionnement."
+    },
+    gcpLink: "https://cloud.google.com/bigquery/docs/partitioned-tables"
+  },
+  {
+    id: 71,
+    domain: "Stockage des données",
+    difficulty: "difficile",
+    question: "Votre entreprise utilise Cloud Spanner comme base de données transactionnelle principale. Vous observez des hot spots sur certains nœuds causant des latences de 500 ms au lieu des 10 ms habituels. Les tables utilisent un UUID v4 comme clé primaire. Après investigation, vous découvrez que la table de transactions est accédée massivement par des lectures séquentielles sur une plage de timestamps. Comment résolvez-vous ce problème ?",
+    options: [
+      { label: "A", text: "Augmenter le nombre de nœuds Spanner pour distribuer la charge" },
+      { label: "B", text: "Créer un index entrelacé (interleaved index) sur la colonne timestamp dans la table parente" },
+      { label: "C", text: "Ajouter un index secondaire sur le timestamp et utiliser des read staleness pour les lectures non critiques" },
+      { label: "D", text: "Remplacer Cloud Spanner par Cloud SQL qui gère mieux les lectures séquentielles" }
+    ],
+    correctAnswers: ["C"],
+    explanation: "Un index secondaire sur le timestamp distribue les lectures sur cet index. Les read staleness (lectures avec un délai configurable, par exemple 15 secondes) permettent à Spanner de lire depuis n'importe quel réplica au lieu du leader uniquement, réduisant considérablement la contention et les hot spots sur les lectures non critiques.",
+    whyOthersWrong: {
+      "A": "Ajouter des nœuds ne résout pas un hot spot car le problème est la concentration de la charge sur une plage de données spécifique, pas un manque de capacité globale.",
+      "B": "Un index entrelacé (interleaved table) est une optimisation pour les relations parent-enfant, pas pour résoudre les hot spots sur les lectures séquentielles par timestamp.",
+      "D": "Cloud SQL ne peut pas gérer la même échelle que Cloud Spanner et aurait les mêmes problèmes de hot spots sur les lectures séquentielles, voire pires."
+    },
+    gcpLink: "https://cloud.google.com/spanner/docs/reads#read_types"
+  },
+  {
+    id: 72,
+    domain: "Stockage des données",
+    difficulty: "facile",
+    question: "Quelle est la durée maximale par défaut du time travel (voyage dans le temps) dans BigQuery, permettant de restaurer ou requêter des données supprimées ou modifiées ?",
+    options: [
+      { label: "A", text: "24 heures" },
+      { label: "B", text: "7 jours" },
+      { label: "C", text: "30 jours" },
+      { label: "D", text: "90 jours" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "BigQuery permet de requêter des données historiques jusqu'à 7 jours en arrière via la clause FOR SYSTEM_TIME AS OF ou via les décorateurs de table. Cette fonctionnalité, appelée time travel, est configurable entre 2 et 7 jours par dataset.",
+    whyOthersWrong: {
+      "A": "24 heures est insuffisant. La fenêtre de time travel par défaut est de 7 jours, pas 24 heures.",
+      "C": "30 jours dépasse la limite maximale du time travel BigQuery. La limite est de 7 jours maximum.",
+      "D": "90 jours n'est pas la durée du time travel. C'est le seuil après lequel BigQuery applique le tarif de stockage long-terme."
+    },
+    gcpLink: "https://cloud.google.com/bigquery/docs/time-travel"
+  },
+  {
+    id: 73,
+    domain: "Stockage des données",
+    difficulty: "intermédiaire",
+    question: "Votre entreprise doit choisir entre Cloud SQL et AlloyDB pour héberger une base de données PostgreSQL qui gère à la fois des requêtes transactionnelles (OLTP) et des requêtes analytiques (OLAP). Le volume de données est de 2 To avec 10 000 requêtes par seconde en lecture. Quel service est le plus adapté et pourquoi ?",
+    options: [
+      { label: "A", text: "Cloud SQL PostgreSQL avec des réplicas de lecture pour distribuer la charge" },
+      { label: "B", text: "AlloyDB pour PostgreSQL, qui offre un moteur analytique intégré basé sur des index columnar en plus du moteur transactionnel" },
+      { label: "C", text: "Cloud SQL PostgreSQL avec une instance de très grande taille (96 vCPU)" },
+      { label: "D", text: "Utiliser deux bases séparées : Cloud SQL pour l'OLTP et BigQuery pour l'OLAP" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "AlloyDB est un service PostgreSQL managé par Google qui intègre un moteur analytique columnar en plus du moteur transactionnel row-based. Les index columnar accélèrent les requêtes analytiques jusqu'à 100x sans impact sur les performances transactionnelles, ce qui en fait la solution idéale pour les charges de travail hybrides HTAP.",
+    whyOthersWrong: {
+      "A": "Cloud SQL avec réplicas de lecture distribue la charge de lecture mais n'optimise pas les requêtes analytiques. Les réplicas utilisent le même moteur row-based, peu performant pour l'OLAP.",
+      "C": "Augmenter la taille de l'instance est du scaling vertical qui a des limites. Cela n'améliore pas fondamentalement les performances des requêtes analytiques sur un moteur row-based.",
+      "D": "Séparer en deux bases ajoute de la complexité de synchronisation, de la latence entre les systèmes et des coûts de duplication de données. AlloyDB unifie les deux besoins."
+    },
+    gcpLink: "https://cloud.google.com/alloydb/docs/overview"
+  },
+  {
+    id: 74,
+    domain: "Stockage des données",
+    difficulty: "difficile",
+    question: "Vous gérez un data warehouse BigQuery avec des tables factuelles et dimensionnelles. L'équipe BI signale que certaines requêtes de jointure entre la table de faits (2 To, partitionnée par date) et la table de dimensions produits (500 Mo) sont lentes. Quelle optimisation de BigQuery est la plus efficace pour accélérer ces jointures ? (Sélectionnez 2 réponses)",
+    options: [
+      { label: "A", text: "Créer une vue matérialisée qui pré-calcule la jointure entre les tables de faits et de dimensions" },
+      { label: "B", text: "Activer le cache de résultats BigQuery et s'assurer que les requêtes sont déterministes" },
+      { label: "C", text: "Dénormaliser en intégrant les champs de la dimension directement dans la table de faits avec des STRUCT" },
+      { label: "D", text: "Créer un index B-tree sur la clé de jointure de la table de faits" }
+    ],
+    correctAnswers: ["A", "C"],
+    explanation: "Les vues matérialisées pré-calculent et stockent les résultats de jointures fréquentes, offrant des performances proches d'une table dénormalisée avec une maintenance automatique. La dénormalisation avec STRUCT élimine complètement le JOIN à l'exécution. Les deux approches réduisent drastiquement le temps de requête.",
+    whyOthersWrong: {
+      "B": "Le cache de résultats ne fonctionne que pour des requêtes identiques et est invalidé dès que les données changent. Pour une table de faits mise à jour quotidiennement, le cache est rarement utile pour les jointures.",
+      "D": "BigQuery ne supporte pas les index B-tree traditionnels. Son architecture columnar et distribuée optimise les requêtes différemment, via le partitionnement et le clustering."
+    },
+    gcpLink: "https://cloud.google.com/bigquery/docs/materialized-views-intro"
+  },
+  {
+    id: 75,
+    domain: "Stockage des données",
+    difficulty: "intermédiaire",
+    question: "Votre application utilise Cloud Spanner pour les données transactionnelles et BigQuery pour l'analytique. Vous devez synchroniser les données de Spanner vers BigQuery en quasi-temps réel pour alimenter des tableaux de bord. Quelle est la méthode la plus simple et recommandée ?",
+    options: [
+      { label: "A", text: "Configurer la fédération Spanner-BigQuery pour requêter Spanner directement depuis BigQuery" },
+      { label: "B", text: "Utiliser le connecteur Spanner change streams vers Dataflow, qui écrit dans BigQuery" },
+      { label: "C", text: "Exporter les données Spanner vers Cloud Storage toutes les heures et les charger dans BigQuery" },
+      { label: "D", text: "Utiliser Datastream pour capturer les changements Spanner vers BigQuery" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Spanner change streams capturent en continu les modifications (INSERT, UPDATE, DELETE) sur les tables Spanner. Couplés avec un pipeline Dataflow utilisant le connecteur natif SpannerIO.readChangeStream, les changements sont répliqués en quasi-temps réel vers BigQuery. C'est la méthode CDC native recommandée pour Spanner.",
+    whyOthersWrong: {
+      "A": "La fédération Spanner-BigQuery permet de requêter Spanner depuis BigQuery mais envoie les requêtes analytiques directement sur Spanner, impactant ses performances transactionnelles. Ce n'est pas adapté pour alimenter des tableaux de bord.",
+      "C": "L'export toutes les heures n'est pas du quasi-temps réel et nécessite un processus batch qui crée un délai d'une heure minimum dans les données du tableau de bord.",
+      "D": "Datastream ne supporte pas Cloud Spanner comme source. Il est conçu pour les bases MySQL, PostgreSQL et Oracle."
+    },
+    gcpLink: "https://cloud.google.com/spanner/docs/change-streams"
   }
 ];

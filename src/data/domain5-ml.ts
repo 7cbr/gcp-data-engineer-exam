@@ -1,4 +1,4 @@
-import { Question } from './types';
+import type { Question } from './types';
 
 export const domain5Questions: Question[] = [
   {
@@ -180,5 +180,184 @@ export const domain5Questions: Question[] = [
       "D": "Le mode shadow permet de vérifier la stabilité technique mais ne mesure pas l'impact business réel puisque les prédictions ne sont pas servies aux utilisateurs. Il ne permet pas de mesurer le taux de conversion."
     },
     gcpLink: "https://cloud.google.com/vertex-ai/docs/general/deployment#traffic-split"
+  },
+  {
+    id: 84,
+    domain: "Machine Learning et AI sur GCP",
+    difficulty: "facile",
+    question: "Votre entreprise souhaite intégrer des capacités de traduction automatique dans son application de support client pour traduire les tickets des clients internationaux en français. Vous n'avez pas d'expertise ML. Quelle solution GCP est la plus rapide à implémenter ?",
+    options: [
+      { label: "A", text: "Entraîner un modèle de traduction personnalisé avec Vertex AI" },
+      { label: "B", text: "Utiliser l'API Cloud Translation pré-entraînée de Google" },
+      { label: "C", text: "Déployer un modèle open-source de traduction (MarianMT) sur Compute Engine" },
+      { label: "D", text: "Utiliser BigQuery ML avec un modèle de traduction" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "L'API Cloud Translation est un service pré-entraîné qui offre une traduction de haute qualité entre plus de 100 langues via un simple appel API. Aucune expertise ML n'est nécessaire. L'API supporte la détection automatique de la langue source et offre des modèles Neural Machine Translation de qualité production.",
+    whyOthersWrong: {
+      "A": "Entraîner un modèle de traduction personnalisé nécessite des corpus parallèles importants et une expertise ML significative. L'API pré-entraînée couvre la plupart des cas d'usage.",
+      "C": "Déployer un modèle open-source nécessite de gérer l'infrastructure, les mises à jour et le scaling. C'est plus complexe et moins performant que l'API managée de Google.",
+      "D": "BigQuery ML ne supporte pas nativement les modèles de traduction. Ce n'est pas l'outil adapté pour ce cas d'usage."
+    },
+    gcpLink: "https://cloud.google.com/translate/docs/overview"
+  },
+  {
+    id: 85,
+    domain: "Machine Learning et AI sur GCP",
+    difficulty: "intermédiaire",
+    question: "Votre équipe ML utilise des notebooks Jupyter pour le développement de modèles. Les data scientists ont besoin d'un environnement collaboratif avec accès aux GPU, intégration Git, et la possibilité de planifier l'exécution automatique de notebooks. Quelle solution GCP est la plus adaptée ?",
+    options: [
+      { label: "A", text: "Compute Engine avec JupyterLab installé manuellement" },
+      { label: "B", text: "Vertex AI Workbench (managed notebooks) avec des instances GPU et l'intégration native avec les services Vertex AI" },
+      { label: "C", text: "Google Colab Enterprise" },
+      { label: "D", text: "Cloud Shell avec JupyterLab" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Vertex AI Workbench fournit des notebooks managés avec support GPU/TPU, intégration Git native, planification d'exécution de notebooks, et connexion directe aux services Vertex AI (training, datasets, feature store). C'est l'environnement de développement ML recommandé sur GCP pour les équipes professionnelles.",
+    whyOthersWrong: {
+      "A": "Installer JupyterLab manuellement sur Compute Engine nécessite de gérer l'infrastructure, les dépendances, les mises à jour de sécurité, et n'offre pas d'intégration native avec les services ML.",
+      "C": "Google Colab Enterprise est adapté pour l'exploration rapide mais offre moins de contrôle sur l'infrastructure (GPU spécifiques, stockage persistant) et moins d'intégration avec les pipelines ML en production.",
+      "D": "Cloud Shell est un environnement éphémère avec des ressources limitées (pas de GPU) et un timeout d'inactivité. Il n'est pas adapté pour le développement ML."
+    },
+    gcpLink: "https://cloud.google.com/vertex-ai/docs/workbench/introduction"
+  },
+  {
+    id: 86,
+    domain: "Machine Learning et AI sur GCP",
+    difficulty: "intermédiaire",
+    question: "Votre entreprise de télécommunications souhaite prédire le churn (départ) des clients. Vous avez un dataset de 2 millions de lignes dans BigQuery avec 50 features et un label binaire (churn/pas churn). Le dataset est très déséquilibré : seulement 3% des clients ont churné. Quel type de modèle BigQuery ML et quelle technique utilisez-vous ?",
+    options: [
+      { label: "A", text: "Un modèle LINEAR_REG avec normalisation des features" },
+      { label: "B", text: "Un modèle BOOSTED_TREE_CLASSIFIER avec le paramètre auto_class_weights=TRUE pour gérer le déséquilibre des classes" },
+      { label: "C", text: "Un modèle KMEANS pour segmenter les clients susceptibles de churner" },
+      { label: "D", text: "Un modèle LOGISTIC_REG sans ajustement car 2 millions de lignes suffisent" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "BOOSTED_TREE_CLASSIFIER (basé sur XGBoost) est performant pour les problèmes de classification tabulaires avec de nombreuses features. Le paramètre auto_class_weights=TRUE ajuste automatiquement les poids des classes en fonction de leur fréquence, compensant le déséquilibre (3% de positifs). XGBoost capture aussi les interactions non-linéaires entre features.",
+    whyOthersWrong: {
+      "A": "LINEAR_REG est un modèle de régression pour prédire des valeurs continues, pas pour la classification binaire. Il faudrait au minimum LOGISTIC_REG pour la classification.",
+      "C": "KMEANS est un algorithme de clustering non supervisé. Il ne peut pas utiliser le label churn/pas churn pour apprendre à prédire. C'est inapproprié pour un problème de classification supervisée.",
+      "D": "LOGISTIC_REG peut fonctionner mais est moins performant que les gradient boosted trees pour les datasets tabulaires complexes. De plus, sans ajustement du déséquilibre de classes, le modèle prédira quasi-systématiquement 'pas churn' (la classe majoritaire à 97%)."
+    },
+    gcpLink: "https://cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-create-boosted-tree"
+  },
+  {
+    id: 87,
+    domain: "Machine Learning et AI sur GCP",
+    difficulty: "difficile",
+    question: "Votre entreprise veut utiliser un grand modèle de langage (LLM) pour analyser des contrats juridiques internes et répondre aux questions des juristes. Les contrats contiennent des informations confidentielles qui ne doivent pas quitter l'infrastructure de l'entreprise. Quelle approche est la plus adaptée sur GCP ?",
+    options: [
+      { label: "A", text: "Utiliser l'API Gemini directement avec les contrats envoyés comme contexte dans le prompt" },
+      { label: "B", text: "Déployer un modèle open-source (LLaMA) sur Vertex AI avec des données de fine-tuning, dans un VPC dédié avec VPC Service Controls" },
+      { label: "C", text: "Utiliser Vertex AI Search (anciennement Enterprise Search) avec un datastore privé contenant les contrats et RAG (Retrieval Augmented Generation)" },
+      { label: "D", text: "Envoyer les contrats à ChatGPT via l'API OpenAI depuis une Cloud Function" }
+    ],
+    correctAnswers: ["C"],
+    explanation: "Vertex AI Search avec RAG permet d'indexer les contrats dans un datastore privé sur GCP et d'utiliser un LLM pour répondre aux questions en se basant sur le contenu récupéré. Les données restent dans l'infrastructure GCP, le modèle n'est pas entraîné sur les données, et les réponses citent les sources. C'est l'approche la plus adaptée pour les documents confidentiels.",
+    whyOthersWrong: {
+      "A": "Envoyer des contrats confidentiels directement dans les prompts de l'API Gemini expose les données dans les requêtes API. Même avec les garanties de Google, ce n'est pas conforme aux exigences de confidentialité les plus strictes.",
+      "B": "Le fine-tuning d'un LLM open-source est très coûteux et complexe. De plus, le fine-tuning n'est pas la meilleure approche pour la recherche dans des documents : le RAG est plus adapté et plus précis pour ce cas d'usage.",
+      "D": "Envoyer des contrats confidentiels à un service externe (OpenAI) viole directement l'exigence que les données ne quittent pas l'infrastructure de l'entreprise."
+    },
+    gcpLink: "https://cloud.google.com/generative-ai-app-builder/docs/enterprise-search-introduction"
+  },
+  {
+    id: 88,
+    domain: "Machine Learning et AI sur GCP",
+    difficulty: "intermédiaire",
+    question: "Votre équipe a entraîné un modèle TensorFlow pour la prédiction de la demande. Le modèle prend en entrée 20 features numériques et produit une prédiction. Vous devez comprendre quelles features influencent le plus les prédictions pour expliquer les résultats aux stakeholders business. Quel outil Vertex AI utilisez-vous ?",
+    options: [
+      { label: "A", text: "Vertex AI TensorBoard pour visualiser les métriques d'entraînement" },
+      { label: "B", text: "Vertex Explainable AI (feature attributions) qui calcule l'importance de chaque feature pour chaque prédiction" },
+      { label: "C", text: "Vertex AI Model Evaluation pour comparer les performances du modèle" },
+      { label: "D", text: "Vertex AI Experiments pour tracker les hyperparamètres" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Vertex Explainable AI fournit des feature attributions qui quantifient la contribution de chaque feature à chaque prédiction individuelle. Il supporte plusieurs méthodes (Sampled Shapley, Integrated Gradients, XRAI) et s'intègre directement avec les endpoints Vertex AI pour des explications en temps réel avec chaque prédiction.",
+    whyOthersWrong: {
+      "A": "TensorBoard visualise les métriques d'entraînement (loss, accuracy par epoch) mais n'explique pas l'importance des features dans les prédictions individuelles.",
+      "C": "Model Evaluation fournit des métriques agrégées de performance (precision, recall, AUC) mais n'explique pas quelles features influencent chaque prédiction individuelle.",
+      "D": "Experiments trackent les hyperparamètres et les résultats des différentes expériences d'entraînement, mais ne fournissent pas d'explications sur les prédictions."
+    },
+    gcpLink: "https://cloud.google.com/vertex-ai/docs/explainable-ai/overview"
+  },
+  {
+    id: 89,
+    domain: "Machine Learning et AI sur GCP",
+    difficulty: "difficile",
+    question: "Votre modèle de classification d'images est entraîné sur un dataset de 1 million d'images stockées dans Cloud Storage. L'entraînement avec Vertex AI Training prend 48 heures et coûte 2 000 $. Vous devez réduire le temps d'entraînement tout en minimisant les coûts. Quelles optimisations appliquez-vous ? (Sélectionnez 2 réponses)",
+    options: [
+      { label: "A", text: "Convertir les images en format TFRecord pour optimiser le chargement des données et réduire les I/O" },
+      { label: "B", text: "Utiliser des Spot VMs (instances préemptives) avec checkpointing régulier pour réduire les coûts de 60-91%" },
+      { label: "C", text: "Réduire la résolution de toutes les images à 32x32 pixels" },
+      { label: "D", text: "Entraîner le modèle sur un seul GPU plus puissant au lieu de plusieurs GPU" }
+    ],
+    correctAnswers: ["A", "B"],
+    explanation: "Les TFRecords regroupent les images en fichiers binaires séquentiels, éliminant le surcoût des lectures de millions de petits fichiers dans Cloud Storage et accélérant significativement le chargement des données. Les Spot VMs offrent la même puissance de calcul avec une réduction de 60-91% du coût, avec le checkpointing qui protège contre les préemptions.",
+    whyOthersWrong: {
+      "C": "Réduire la résolution à 32x32 pixels dégraderait considérablement la qualité du modèle de classification. C'est une perte de données d'entraînement inacceptable qui impactera les performances.",
+      "D": "Un seul GPU plus puissant ne réduit pas nécessairement le temps de 48 heures de manière significative et peut être plus coûteux. La distribution sur plusieurs GPU avec une stratégie appropriée est généralement plus efficace."
+    },
+    gcpLink: "https://cloud.google.com/vertex-ai/docs/training/using-spot-vms"
+  },
+  {
+    id: 90,
+    domain: "Machine Learning et AI sur GCP",
+    difficulty: "facile",
+    question: "Quelle est la différence principale entre les API pré-entraînées de Google (Vision, Natural Language, Speech-to-Text) et AutoML de Vertex AI ?",
+    options: [
+      { label: "A", text: "Les API pré-entraînées sont gratuites, AutoML est payant" },
+      { label: "B", text: "Les API pré-entraînées sont des modèles génériques prêts à l'emploi, AutoML permet d'entraîner des modèles personnalisés sur vos propres données" },
+      { label: "C", text: "AutoML est uniquement pour le texte, les API pré-entraînées pour les images" },
+      { label: "D", text: "Les API pré-entraînées offrent de meilleures performances qu'AutoML" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Les API pré-entraînées (Vision, Natural Language, Speech-to-Text) sont des modèles génériques entraînés par Google sur de vastes datasets, prêts à utiliser via un simple appel API. AutoML permet d'entraîner des modèles personnalisés sur vos propres données étiquetées quand les API génériques ne répondent pas à votre cas d'usage spécifique.",
+    whyOthersWrong: {
+      "A": "Les deux sont payants. Les API pré-entraînées sont facturées à l'utilisation (par requête), AutoML est facturé pour l'entraînement et le déploiement.",
+      "C": "AutoML supporte les images (AutoML Vision), le texte (AutoML Natural Language), les données tabulaires, et la vidéo. Les API pré-entraînées couvrent aussi le texte (Natural Language API) et la parole (Speech-to-Text).",
+      "D": "AutoML peut surpasser les API pré-entraînées pour des cas d'usage spécifiques car le modèle est entraîné sur vos données domain-specific. Les performances dépendent du cas d'usage."
+    },
+    gcpLink: "https://cloud.google.com/vertex-ai/docs/beginner/beginners-guide"
+  },
+  {
+    id: 91,
+    domain: "Machine Learning et AI sur GCP",
+    difficulty: "difficile",
+    question: "Votre équipe ML déploie 15 modèles différents en production sur des endpoints Vertex AI. Chaque modèle est utilisé par différentes équipes et a des patterns de trafic variés. Les coûts d'infrastructure des endpoints sont élevés car chaque modèle a son propre endpoint dédié avec des ressources provisionnées 24/7. Comment optimisez-vous les coûts ?",
+    options: [
+      { label: "A", text: "Regrouper tous les modèles sur un seul endpoint avec un traffic split" },
+      { label: "B", text: "Utiliser des endpoints Vertex AI avec le co-hosting de modèles et l'autoscaling (y compris le scale-to-zero pour les modèles peu utilisés)" },
+      { label: "C", text: "Migrer tous les modèles vers Cloud Functions avec des conteneurs personnalisés" },
+      { label: "D", text: "Augmenter la taille des instances pour réduire le nombre de réplicas nécessaires" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Le co-hosting de modèles sur Vertex AI permet de déployer plusieurs modèles sur les mêmes ressources d'infrastructure, réduisant le gaspillage. L'autoscaling ajuste les ressources au trafic réel, et le scale-to-zero permet de ne payer aucune ressource pour les modèles rarement appelés, avec un cold start acceptable.",
+    whyOthersWrong: {
+      "A": "Le traffic split sur un seul endpoint est conçu pour router le trafic entre différentes versions du même modèle (A/B testing), pas pour héberger 15 modèles différents avec des entrées/sorties différentes.",
+      "C": "Cloud Functions a des limites de mémoire, de temps d'exécution et de cold start qui rendent le serving ML à grande échelle problématique. De plus, le monitoring ML natif est absent.",
+      "D": "Augmenter la taille des instances est du scaling vertical qui ne réduit pas fondamentalement les coûts. Des instances plus grandes coûtent plus cher par unité et ne s'adaptent pas aux variations de trafic."
+    },
+    gcpLink: "https://cloud.google.com/vertex-ai/docs/predictions/deploy-model-api"
+  },
+  {
+    id: 92,
+    domain: "Machine Learning et AI sur GCP",
+    difficulty: "intermédiaire",
+    question: "Votre entreprise a besoin d'analyser les sentiments des avis clients en français déposés sur son site web. Les avis utilisent un vocabulaire spécifique au secteur de la restauration avec du jargon culinaire. L'API Natural Language de Google ne détecte pas correctement les nuances dans ce domaine. Quelle approche recommandez-vous ?",
+    options: [
+      { label: "A", text: "Augmenter le volume d'appels à l'API Natural Language pour améliorer les résultats" },
+      { label: "B", text: "Utiliser AutoML Natural Language de Vertex AI pour entraîner un modèle de classification de sentiment personnalisé sur un corpus d'avis étiquetés du secteur de la restauration" },
+      { label: "C", text: "Écrire des règles regex pour détecter les mots positifs et négatifs spécifiques à la restauration" },
+      { label: "D", text: "Utiliser BigQuery ML avec un modèle LOGISTIC_REG sur les avis tokenisés" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "AutoML Natural Language permet d'entraîner un modèle de classification de sentiment personnalisé sur vos propres données étiquetées. En fournissant un corpus d'avis du secteur de la restauration avec des labels de sentiment, le modèle apprend le vocabulaire spécifique et les nuances du domaine, offrant de bien meilleures performances qu'un modèle générique.",
+    whyOthersWrong: {
+      "A": "Augmenter le volume d'appels ne change pas la capacité du modèle à comprendre le jargon culinaire. Le modèle pré-entraîné reste le même quelle que soit la fréquence d'utilisation.",
+      "C": "Des règles regex sont fragiles, ne capturent pas les nuances contextuelles, et nécessitent une maintenance constante. Elles ne gèrent pas l'ironie, les négations complexes ou les expressions idiomatiques.",
+      "D": "Un modèle LOGISTIC_REG sur des tokens est trop simple pour capturer les nuances sémantiques de l'analyse de sentiment dans un domaine spécialisé."
+    },
+    gcpLink: "https://cloud.google.com/vertex-ai/docs/text-data/sentiment-analysis/overview"
   }
 ];

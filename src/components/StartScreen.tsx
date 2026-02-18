@@ -2,41 +2,60 @@ import { domains } from '../data/questions';
 
 interface StartScreenProps {
   onStart: () => void;
-  questionCount: number;
+  totalQuestions: number;
+  quizSize: number;
 }
 
-export function StartScreen({ onStart, questionCount }: StartScreenProps) {
+export function StartScreen({ onStart, totalQuestions, quizSize }: StartScreenProps) {
   return (
-    <div className="max-w-3xl mx-auto text-center">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Google Cloud Professional Data Engineer
+    <div className="animate-fade-in">
+      {/* Hero */}
+      <div className="text-center mb-10">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gcp-blue/10 border border-gcp-blue/20 text-gcp-blue text-sm mb-6">
+          <span className="w-2 h-2 rounded-full bg-gcp-blue animate-pulse" />
+          {totalQuestions} questions disponibles
+        </div>
+        <h1 className="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
+          Google Cloud<br />Professional Data Engineer
         </h1>
-        <p className="text-xl text-blue-600 font-semibold">Examen Blanc</p>
+        <p className="text-lg text-white/50">
+          Testez vos connaissances avec un quiz de {quizSize} questions
+        </p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-lg p-8 mb-8 text-left">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Informations</h2>
-        <ul className="space-y-2 text-gray-600">
-          <li><strong>{questionCount} questions</strong> à choix multiples</li>
-          <li>Certaines questions ont <strong>plusieurs bonnes réponses</strong> (indiqué sur la question)</li>
-          <li>Pas de limite de temps (l'examen réel dure 2h)</li>
-          <li>Score affiché à la fin avec corrigé détaillé</li>
-        </ul>
+      {/* Info cards */}
+      <div className="grid grid-cols-2 gap-3 mb-8">
+        <div className="glass rounded-xl p-4">
+          <div className="text-2xl font-bold text-gcp-blue mb-1">{quizSize}</div>
+          <div className="text-sm text-white/50">Questions par quiz</div>
+        </div>
+        <div className="glass rounded-xl p-4">
+          <div className="text-2xl font-bold text-gcp-green mb-1">6</div>
+          <div className="text-sm text-white/50">Domaines couverts</div>
+        </div>
+      </div>
 
-        <h3 className="text-md font-semibold text-gray-800 mt-6 mb-3">Domaines couverts :</h3>
-        <ol className="space-y-1 text-gray-600 text-sm list-decimal list-inside">
+      {/* Domains */}
+      <div className="glass rounded-xl p-5 mb-8">
+        <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider mb-4">Domaines</h3>
+        <div className="space-y-2">
           {domains.map((domain, i) => (
-            <li key={i}>{domain}</li>
+            <div key={i} className="flex items-center gap-3 text-sm text-white/70">
+              <span className="w-5 h-5 rounded-md bg-gradient-to-br from-gcp-blue/20 to-gcp-green/20 flex items-center justify-center text-xs text-white/50 shrink-0">
+                {i + 1}
+              </span>
+              {domain}
+            </div>
           ))}
-        </ol>
+        </div>
       </div>
 
+      {/* Start button */}
       <button
         onClick={onStart}
-        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded-lg text-lg transition-colors cursor-pointer"
+        className="w-full py-4 rounded-xl font-semibold text-lg bg-gradient-to-r from-gcp-blue to-gcp-blue/80 hover:from-gcp-blue/90 hover:to-gcp-blue/70 text-white transition-all cursor-pointer shadow-lg shadow-gcp-blue/20 hover:shadow-gcp-blue/30"
       >
-        Commencer l'examen
+        Commencer le quiz
       </button>
     </div>
   );

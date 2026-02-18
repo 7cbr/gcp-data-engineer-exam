@@ -1,4 +1,4 @@
-import { Question } from './types';
+import type { Question } from './types';
 
 export const domain6Questions: Question[] = [
   {
@@ -160,5 +160,164 @@ export const domain6Questions: Question[] = [
       "D": "Le coût est une contrainte opérationnelle importante mais n'est pas un SLI de qualité de service. Le CTO demande des indicateurs de fiabilité du pipeline, pas des indicateurs financiers."
     },
     gcpLink: "https://cloud.google.com/architecture/framework/reliability/design-scale-high-availability"
+  },
+  {
+    id: 93,
+    domain: "Fiabilité, monitoring et optimisation des pipelines",
+    difficulty: "facile",
+    question: "Votre pipeline Dataflow batch échoue régulièrement à 3h du matin et l'équipe ne s'en aperçoit qu'en arrivant au bureau à 9h. Le pipeline charge les données dans BigQuery pour les rapports quotidiens de 8h. Quelle est la première action à implémenter pour améliorer la fiabilité ?",
+    options: [
+      { label: "A", text: "Exécuter le pipeline manuellement chaque matin avant les rapports" },
+      { label: "B", text: "Configurer Cloud Composer pour orchestrer le pipeline avec des retries automatiques et des alertes par email/Slack en cas d'échec" },
+      { label: "C", text: "Augmenter les ressources du pipeline pour éviter les échecs" },
+      { label: "D", text: "Planifier le pipeline à 6h au lieu de 3h pour réduire la fenêtre de problème" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Cloud Composer (Apache Airflow) permet d'orchestrer le pipeline avec des retries automatiques (en cas d'erreur transitoire), des alertes en cas d'échec final (email, Slack, PagerDuty), et une visibilité sur l'historique des exécutions. Les retries résolvent les erreurs transitoires et les alertes permettent une intervention rapide.",
+    whyOthersWrong: {
+      "A": "L'exécution manuelle est sujette à l'erreur humaine et ne scale pas. Le pipeline doit être automatisé et surveillé.",
+      "C": "Augmenter les ressources peut résoudre certains échecs (out of memory) mais pas les erreurs de données ou les problèmes réseau. Sans monitoring ni retry, les échecs persisteront.",
+      "D": "Changer l'heure d'exécution ne résout pas le problème d'échec et réduit le temps disponible pour la reprise en cas de problème."
+    },
+    gcpLink: "https://cloud.google.com/composer/docs/concepts/overview"
+  },
+  {
+    id: 94,
+    domain: "Fiabilité, monitoring et optimisation des pipelines",
+    difficulty: "intermédiaire",
+    question: "Votre requête BigQuery qui alimente un tableau de bord Looker Studio prend 45 secondes et scanne 8 To de données. Le tableau de bord est consulté 200 fois par jour avec des filtres de date différents. Comment optimisez-vous les performances et réduisez-vous les coûts ?",
+    options: [
+      { label: "A", text: "Utiliser BI Engine pour créer un cache en mémoire des données fréquemment requêtées par le tableau de bord" },
+      { label: "B", text: "Augmenter le nombre de slots BigQuery réservés" },
+      { label: "C", text: "Exporter les données dans Cloud SQL pour des requêtes plus rapides" },
+      { label: "D", text: "Créer 200 vues matérialisées, une par combinaison de filtres" }
+    ],
+    correctAnswers: ["A"],
+    explanation: "BI Engine est un service d'accélération in-memory pour BigQuery qui met en cache les données fréquemment accédées par les outils BI comme Looker Studio. Il réduit la latence des requêtes de secondes à sub-secondes et élimine le coût de scans répétitifs. La réservation de mémoire BI Engine est facturée à un tarif fixe prévisible.",
+    whyOthersWrong: {
+      "B": "Augmenter les slots améliore la concurrence mais pas nécessairement la latence d'une requête individuelle de 8 To. Les coûts augmentent sans réduire le volume scanné.",
+      "C": "Cloud SQL n'est pas conçu pour des datasets de 8 To et ses performances seraient inférieures à BigQuery pour l'analytique. La migration est complexe et contre-productive.",
+      "D": "200 vues matérialisées sont ingérables, coûteuses en stockage et en maintenance. BI Engine résout le problème de manière transparente sans multiplier les objets."
+    },
+    gcpLink: "https://cloud.google.com/bigquery/docs/bi-engine-intro"
+  },
+  {
+    id: 95,
+    domain: "Fiabilité, monitoring et optimisation des pipelines",
+    difficulty: "intermédiaire",
+    question: "Votre pipeline de données utilise un cluster Dataproc avec 20 workers pour des jobs Spark quotidiens. Le cluster est actif 24/7 mais les jobs ne s'exécutent que 6 heures par jour (entre 2h et 8h du matin). Les coûts du cluster sont élevés. Comment optimisez-vous les coûts sans impacter les performances ?",
+    options: [
+      { label: "A", text: "Réduire le nombre de workers à 5 en permanence" },
+      { label: "B", text: "Utiliser des clusters éphémères Dataproc créés par Cloud Composer avant chaque job et supprimés après, avec des VMs préemptives pour les workers secondaires" },
+      { label: "C", text: "Migrer vers Dataflow qui est serverless" },
+      { label: "D", text: "Activer l'autoscaling du cluster Dataproc existant" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Les clusters éphémères sont créés à la demande, exécutent les jobs, puis sont supprimés automatiquement. Combinés avec des VMs préemptives (60-91% moins cher) pour les workers secondaires et l'orchestration par Cloud Composer, vous ne payez que pour les 6 heures d'utilisation au lieu de 24/7, réduisant les coûts de plus de 80%.",
+    whyOthersWrong: {
+      "A": "Réduire à 5 workers diminue les coûts de 75% mais vous payez encore pour 18 heures d'inactivité par jour. De plus, les jobs pourraient être plus lents avec moins de workers.",
+      "C": "Migrer des jobs Spark vers Dataflow nécessite une réécriture en Apache Beam. C'est un effort significatif qui n'est pas justifié uniquement pour l'optimisation des coûts.",
+      "D": "L'autoscaling réduit les workers pendant les périodes d'inactivité mais maintient un minimum de 2 workers 24/7. Les clusters éphémères éliminent totalement le coût pendant les 18 heures d'inactivité."
+    },
+    gcpLink: "https://cloud.google.com/dataproc/docs/concepts/workflows/overview"
+  },
+  {
+    id: 96,
+    domain: "Fiabilité, monitoring et optimisation des pipelines",
+    difficulty: "difficile",
+    question: "Votre pipeline Dataflow streaming traite des transactions financières. Vous devez garantir une sémantique exactly-once de bout en bout : chaque transaction doit être traitée exactement une fois, sans duplication ni perte, même en cas de redémarrage du pipeline ou de défaillance d'un worker. Comment implémentez-vous cette garantie ?",
+    options: [
+      { label: "A", text: "Activer le mode at-least-once de Dataflow et dédupliquer manuellement dans BigQuery" },
+      { label: "B", text: "Utiliser Dataflow en mode streaming avec la garantie exactly-once native, combiné avec l'API BigQuery Storage Write en mode COMMITTED pour les écritures" },
+      { label: "C", text: "Utiliser des transactions Cloud Spanner pour garantir l'idempotence de chaque écriture" },
+      { label: "D", text: "Configurer Pub/Sub avec acknowledge deadline très court pour éviter les retransmissions" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Dataflow offre nativement une garantie exactly-once pour le traitement streaming : chaque élément est traité exactement une fois même en cas de défaillance de worker (grâce au checkpointing et au shuffling via Streaming Engine). L'API Storage Write en mode COMMITTED garantit que chaque écriture dans BigQuery est atomique et idempotente, complétant la chaîne exactly-once de bout en bout.",
+    whyOthersWrong: {
+      "A": "Le mode at-least-once avec déduplication manuelle est plus complexe, sujet aux erreurs, et ajoute une latence de déduplication. La garantie exactly-once native de Dataflow est préférable.",
+      "C": "Utiliser Spanner pour l'idempotence ajoute un composant externe et une complexité significative. La sémantique exactly-once de Dataflow + Storage Write API couvre le besoin sans composant supplémentaire.",
+      "D": "Un acknowledge deadline court augmente les retransmissions au lieu de les réduire (messages ré-envoyés avant d'être traités). Pub/Sub est at-least-once par design."
+    },
+    gcpLink: "https://cloud.google.com/dataflow/docs/concepts/exactly-once"
+  },
+  {
+    id: 97,
+    domain: "Fiabilité, monitoring et optimisation des pipelines",
+    difficulty: "intermédiaire",
+    question: "Les requêtes de votre équipe data science sur BigQuery sont souvent lentes car elles utilisent des SELECT * sur des tables de plusieurs To. Vous voulez mettre en place des bonnes pratiques sans bloquer le travail des data scientists. Quelle combinaison de mesures implémentez-vous ?",
+    options: [
+      { label: "A", text: "Bloquer toutes les requêtes SELECT * avec une policy organisationnelle" },
+      { label: "B", text: "Configurer des custom cost controls (max bytes billed par requête) et créer des vues curated avec les colonnes les plus utilisées pour guider les data scientists" },
+      { label: "C", text: "Migrer vers la tarification par slots pour que les SELECT * ne coûtent rien de plus" },
+      { label: "D", text: "Supprimer les colonnes inutilisées des tables BigQuery" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Les custom cost controls (maximum_bytes_billed) empêchent les requêtes excessivement coûteuses de s'exécuter, protégeant contre les erreurs accidentelles. Les vues curated avec les colonnes pertinentes guident les data scientists vers des requêtes efficaces sans les bloquer. C'est une approche éducative et protectrice.",
+    whyOthersWrong: {
+      "A": "Bloquer les SELECT * est trop restrictif et peut empêcher les explorations légitimes. Les data scientists ont parfois besoin de voir toutes les colonnes lors de la phase de découverte.",
+      "C": "La tarification par slots rend les coûts prévisibles mais les SELECT * continuent de consommer des slots (ressources de calcul) inutilement, ralentissant les requêtes des autres utilisateurs.",
+      "D": "Supprimer des colonnes peut perdre des données utiles pour d'autres cas d'usage. Le problème est l'utilisation, pas la structure de la table."
+    },
+    gcpLink: "https://cloud.google.com/bigquery/docs/best-practices-costs"
+  },
+  {
+    id: 98,
+    domain: "Fiabilité, monitoring et optimisation des pipelines",
+    difficulty: "difficile",
+    question: "Votre entreprise opère un pipeline de données critique avec un SLA de 99.95% de disponibilité. Le pipeline utilise Pub/Sub, Dataflow et BigQuery dans la région europe-west1. Vous devez concevoir une stratégie de disaster recovery qui protège contre une panne régionale complète de europe-west1 avec un RTO (Recovery Time Objective) de 30 minutes. Quelle architecture implémentez-vous ?",
+    options: [
+      { label: "A", text: "Déployer un pipeline identique en standby dans europe-west4, avec Pub/Sub multi-régional et un basculement manuel via Cloud DNS" },
+      { label: "B", text: "Utiliser un topic Pub/Sub avec des abonnements dans deux régions, deux pipelines Dataflow actifs-actifs écrivant dans un dataset BigQuery multi-régional EU" },
+      { label: "C", text: "Sauvegarder les données dans Cloud Storage bi-régional et restaurer le pipeline manuellement en cas de panne" },
+      { label: "D", text: "S'appuyer sur les SLA natifs de GCP qui garantissent déjà 99.95% de disponibilité par service" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "L'architecture active-active avec deux pipelines dans des régions différentes consommant le même topic Pub/Sub (via des abonnements séparés) offre un basculement instantané. BigQuery multi-régional EU réplique automatiquement les données. Si une région tombe, l'autre continue de traiter sans interruption, respectant le RTO de 30 minutes.",
+    whyOthersWrong: {
+      "A": "Un pipeline en standby nécessite un basculement manuel qui peut prendre plus de 30 minutes (détection de panne, décision, activation). De plus, les données accumulées dans Pub/Sub pendant le standby doivent être retraitées.",
+      "C": "La restauration manuelle depuis Cloud Storage ne respectera probablement pas le RTO de 30 minutes pour un pipeline complet avec état. C'est adapté au backup mais pas au disaster recovery rapide.",
+      "D": "Les SLA par service ne garantissent pas un SLA end-to-end du pipeline. Une panne régionale affectant plusieurs services simultanément n'est pas couverte par les SLA individuels."
+    },
+    gcpLink: "https://cloud.google.com/architecture/disaster-recovery"
+  },
+  {
+    id: 99,
+    domain: "Fiabilité, monitoring et optimisation des pipelines",
+    difficulty: "facile",
+    question: "Vous constatez qu'une requête BigQuery scanne 2 To de données alors que vous n'avez besoin que des données du dernier mois (environ 200 Go). La table est partitionnée par date. Quelle est la cause la plus probable et la solution ?",
+    options: [
+      { label: "A", text: "BigQuery ne supporte pas le pruning de partitions, il faut migrer vers Cloud SQL" },
+      { label: "B", text: "La requête n'inclut pas de filtre WHERE sur la colonne de partitionnement. Ajouter un filtre sur la date pour activer le pruning de partitions" },
+      { label: "C", text: "La table est trop volumineuse pour BigQuery, il faut la splitter en plusieurs tables" },
+      { label: "D", text: "Les partitions sont corrompues et doivent être recréées" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Le pruning de partitions dans BigQuery ne s'active que lorsqu'un filtre WHERE est appliqué sur la colonne de partitionnement. Sans ce filtre, BigQuery scanne toutes les partitions (l'intégralité de la table). En ajoutant WHERE date_column >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 MONTH), BigQuery ne scanne que les partitions du dernier mois.",
+    whyOthersWrong: {
+      "A": "BigQuery supporte parfaitement le pruning de partitions. C'est une fonctionnalité fondamentale de BigQuery qui réduit considérablement les coûts et le temps de requête.",
+      "C": "BigQuery gère des tables de pétaoctets sans problème. Splitter la table ne résout pas le problème de scan complet si les requêtes ne filtrent toujours pas par partition.",
+      "D": "Les partitions BigQuery ne se corrompent pas de cette manière. Le problème est dans la requête, pas dans les données."
+    },
+    gcpLink: "https://cloud.google.com/bigquery/docs/querying-partitioned-tables"
+  },
+  {
+    id: 100,
+    domain: "Fiabilité, monitoring et optimisation des pipelines",
+    difficulty: "difficile",
+    question: "Votre entreprise opère 50 pipelines de données sur GCP. Vous devez mettre en place un observability stack complet pour monitorer la santé de tous les pipelines, tracer les données de bout en bout (data lineage), et alerter l'équipe SRE en cas de problème. Quelle combinaison de services est la plus complète ? (Sélectionnez 2 réponses)",
+    options: [
+      { label: "A", text: "Cloud Monitoring avec des dashboards personnalisés, des alertes multi-conditions sur les métriques Dataflow/BigQuery, et Cloud Logging pour l'analyse des logs d'erreur" },
+      { label: "B", text: "Dataplex pour le data lineage et la qualité des données, avec Data Catalog pour tracker le cycle de vie des données à travers les pipelines" },
+      { label: "C", text: "Installer Grafana et Prometheus sur des VMs pour le monitoring des pipelines" },
+      { label: "D", text: "Utiliser uniquement les journaux Cloud Logging pour tout le monitoring" }
+    ],
+    correctAnswers: ["A", "B"],
+    explanation: "Cloud Monitoring offre un monitoring opérationnel complet (métriques, alertes, dashboards) pour tous les services GCP utilisés dans les pipelines. Dataplex avec Data Catalog fournit le data lineage (traçabilité des données de la source à la destination), la qualité des données et la gouvernance. Ensemble, ils couvrent l'observability opérationnel et la traçabilité des données.",
+    whyOthersWrong: {
+      "C": "Grafana et Prometheus sur des VMs nécessitent une gestion d'infrastructure et ne s'intègrent pas nativement avec les métriques des services GCP managés. Cloud Monitoring est la solution native intégrée.",
+      "D": "Cloud Logging seul ne fournit pas de dashboards de métriques, d'alertes proactives basées sur des seuils, ni de data lineage. Les logs sont un composant de l'observability, pas une solution complète."
+    },
+    gcpLink: "https://cloud.google.com/monitoring/docs/monitoring-overview"
   }
 ];

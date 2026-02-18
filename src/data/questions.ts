@@ -1,4 +1,4 @@
-import { Question } from './types';
+import type { Question } from './types';
 import { domain1Questions } from './domain1-conception';
 import { domain2Questions } from './domain2-ingestion';
 import { domain3Questions } from './domain3-stockage';

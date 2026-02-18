@@ -1,4 +1,4 @@
-import { Question } from './types';
+import type { Question } from './types';
 
 export const domain1Questions: Question[] = [
   {
@@ -179,5 +179,164 @@ export const domain1Questions: Question[] = [
       "D": "Dataflow est un moteur d'exécution de pipelines, pas un orchestrateur. Il ne peut pas gérer les dépendances entre services différents (Cloud SQL, BigQuery, Vertex AI)."
     },
     gcpLink: "https://cloud.google.com/composer/docs/concepts/overview"
+  },
+  {
+    id: 51,
+    domain: "Conception de systèmes de traitement de données",
+    difficulty: "facile",
+    question: "Une startup souhaite déployer rapidement une API REST qui permet à des applications tierces de requêter des données agrégées stockées dans BigQuery. L'API reçoit en moyenne 50 requêtes par minute, avec des pics occasionnels à 500 requêtes par minute. Quel service GCP est le plus adapté pour héberger cette API ?",
+    options: [
+      { label: "A", text: "Compute Engine avec un groupe d'instances managé et un load balancer" },
+      { label: "B", text: "Cloud Run avec auto-scaling" },
+      { label: "C", text: "App Engine Flexible" },
+      { label: "D", text: "Google Kubernetes Engine (GKE)" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Cloud Run est un service serverless qui scale automatiquement de 0 à N instances en fonction du trafic. Pour une API avec un trafic modéré et des pics occasionnels, Cloud Run est idéal : pas de gestion d'infrastructure, facturation à l'usage, et scaling rapide pour absorber les pics.",
+    whyOthersWrong: {
+      "A": "Compute Engine avec un MIG est surqualifié pour ce cas d'usage. La gestion du load balancer, des instances et de l'autoscaling ajoute une complexité inutile pour un trafic modéré.",
+      "C": "App Engine Flexible est une option valide mais plus coûteuse que Cloud Run car les instances ne scalent pas à zéro et la facturation est à la VM, pas à la requête.",
+      "D": "GKE est conçu pour des déploiements complexes avec de nombreux microservices. Pour une seule API, c'est excessivement complexe et coûteux."
+    },
+    gcpLink: "https://cloud.google.com/run/docs/overview/what-is-cloud-run"
+  },
+  {
+    id: 52,
+    domain: "Conception de systèmes de traitement de données",
+    difficulty: "intermédiaire",
+    question: "Une entreprise de logistique souhaite concevoir un système de tracking en temps réel pour ses 10 000 véhicules. Chaque véhicule envoie sa position GPS toutes les 5 secondes. Le système doit permettre des requêtes géospatiales en temps réel (« quels véhicules sont dans un rayon de 5 km de ce point ? ») et conserver un historique de 2 ans pour l'analyse. Quelle architecture recommandez-vous ?",
+    options: [
+      { label: "A", text: "Pub/Sub → Dataflow → BigQuery avec des fonctions géospatiales BigQuery GIS" },
+      { label: "B", text: "Pub/Sub → Dataflow → Bigtable pour le temps réel + BigQuery pour l'historique analytique" },
+      { label: "C", text: "Pub/Sub → Cloud Functions → Firestore avec des requêtes GeoPoint" },
+      { label: "D", text: "Écrire directement depuis les véhicules dans Cloud SQL PostgreSQL avec PostGIS" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Bigtable offre la latence en millisecondes nécessaire pour les requêtes de position en temps réel à grande échelle (10 000 véhicules x 1 position/5s = 2 000 écritures/seconde). BigQuery avec BigQuery GIS est idéal pour l'analyse historique géospatiale sur 2 ans. Dataflow assure la transformation et le routage vers les deux destinations.",
+    whyOthersWrong: {
+      "A": "BigQuery seul n'est pas adapté pour les requêtes en temps réel avec une latence de millisecondes. BigQuery a une latence minimale de quelques secondes, insuffisante pour le tracking temps réel.",
+      "C": "Firestore peut gérer des requêtes GeoPoint mais ne scale pas efficacement pour 2 000 écritures/seconde de positions GPS et n'est pas optimisé pour les séries temporelles massives.",
+      "D": "Cloud SQL avec PostGIS ne gère pas efficacement le volume de 2 000 écritures/seconde continues et n'est pas conçu pour conserver 2 ans d'historique à grande échelle."
+    },
+    gcpLink: "https://cloud.google.com/bigtable/docs/overview"
+  },
+  {
+    id: 53,
+    domain: "Conception de systèmes de traitement de données",
+    difficulty: "difficile",
+    question: "Votre entreprise gère une plateforme SaaS multi-tenant avec 500 clients. Chaque client génère entre 1 Go et 500 Go de données par mois. Les exigences sont : isolation des données entre clients, possibilité pour chaque client de requêter ses propres données via SQL, et coûts proportionnels à l'usage de chaque client. Quelle architecture BigQuery est la plus adaptée ?",
+    options: [
+      { label: "A", text: "Un seul dataset BigQuery avec toutes les données et un filtrage par colonne tenant_id" },
+      { label: "B", text: "Un projet GCP séparé par client avec un dataset BigQuery dédié" },
+      { label: "C", text: "Un dataset BigQuery par client dans un projet partagé, avec des vues autorisées et des réservations de slots par client" },
+      { label: "D", text: "BigQuery Omni pour distribuer les données entre plusieurs clouds selon le client" }
+    ],
+    correctAnswers: ["C"],
+    explanation: "Un dataset par client offre une isolation logique via IAM au niveau du dataset. Les vues autorisées permettent un contrôle d'accès granulaire. Les réservations de slots par client garantissent des performances isolées et une facturation proportionnelle à l'usage. Cette approche balance isolation, performance et gestion opérationnelle pour 500 clients.",
+    whyOthersWrong: {
+      "A": "Un seul dataset avec filtrage par tenant_id ne fournit pas d'isolation IAM entre clients. Un client pourrait potentiellement accéder aux données d'un autre si les permissions sont mal configurées. De plus, les coûts ne sont pas facilement répartis par client.",
+      "B": "Un projet par client offre l'isolation maximale mais est très difficile à gérer pour 500 clients : 500 projets, 500 facturations, 500 configurations IAM. C'est opérationnellement ingérable.",
+      "D": "BigQuery Omni est conçu pour interroger des données stockées dans AWS S3 ou Azure Blob Storage, pas pour l'isolation multi-tenant."
+    },
+    gcpLink: "https://cloud.google.com/bigquery/docs/reservations-intro"
+  },
+  {
+    id: 54,
+    domain: "Conception de systèmes de traitement de données",
+    difficulty: "intermédiaire",
+    question: "Une entreprise de média souhaite construire un pipeline d'analyse de sentiment en quasi-temps réel sur les commentaires des réseaux sociaux. Les commentaires arrivent via une API externe à raison de 10 000 par minute et doivent être enrichis avec un score de sentiment avant d'être stockés. Quelle architecture est la plus adaptée ?",
+    options: [
+      { label: "A", text: "Cloud Scheduler → Cloud Functions → Natural Language API → Cloud SQL" },
+      { label: "B", text: "Pub/Sub → Dataflow → Natural Language API → BigQuery" },
+      { label: "C", text: "Pub/Sub → Cloud Functions → Natural Language API → Firestore" },
+      { label: "D", text: "Pub/Sub → Dataproc Spark Streaming → BigQuery ML pour le sentiment → BigQuery" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Pub/Sub absorbe le flux de commentaires et découple l'ingestion du traitement. Dataflow en streaming permet de traiter les commentaires en continu, d'appeler l'API Natural Language pour le score de sentiment, et d'écrire les résultats enrichis dans BigQuery pour l'analyse. Cette architecture est scalable, managée et tolérante aux pannes.",
+    whyOthersWrong: {
+      "A": "Cloud Scheduler avec Cloud Functions est conçu pour le traitement par lots planifié, pas pour un flux continu de 10 000 commentaires par minute. Cloud Functions a des limites de concurrence et de timeout.",
+      "C": "Cloud Functions peut être déclenchée par Pub/Sub mais a des limites de concurrence et de temps d'exécution. Firestore n'est pas optimisé pour l'analyse analytique à grande échelle des résultats.",
+      "D": "Dataproc Spark Streaming est plus complexe à gérer que Dataflow. BigQuery ML ne dispose pas d'un modèle d'analyse de sentiment natif aussi performant que l'API Natural Language dédiée."
+    },
+    gcpLink: "https://cloud.google.com/natural-language/docs/basics"
+  },
+  {
+    id: 55,
+    domain: "Conception de systèmes de traitement de données",
+    difficulty: "difficile",
+    question: "Vous devez concevoir un data lakehouse sur GCP pour une entreprise qui souhaite combiner les avantages d'un data lake (stockage de données brutes à faible coût) et d'un data warehouse (requêtes SQL performantes). Les données brutes sont au format Parquet dans Cloud Storage et représentent 200 To. Quelle architecture est la plus adaptée ? (Sélectionnez 2 réponses)",
+    options: [
+      { label: "A", text: "Utiliser BigLake pour créer des tables externes sur les fichiers Parquet dans Cloud Storage, avec support du contrôle d'accès unifié" },
+      { label: "B", text: "Charger toutes les données Parquet dans des tables natives BigQuery pour de meilleures performances" },
+      { label: "C", text: "Utiliser Dataproc avec Apache Iceberg sur Cloud Storage pour gérer les tables avec des transactions ACID et le time travel" },
+      { label: "D", text: "Stocker toutes les données dans Bigtable pour les performances de lecture" }
+    ],
+    correctAnswers: ["A", "C"],
+    explanation: "BigLake permet de requêter des données Parquet directement dans Cloud Storage via BigQuery avec un contrôle d'accès unifié, incarnant le concept de lakehouse. Apache Iceberg sur Dataproc ajoute les transactions ACID, le time travel et l'évolution de schéma aux tables du data lake. Ces deux approches sont complémentaires pour un lakehouse complet.",
+    whyOthersWrong: {
+      "B": "Charger 200 To dans BigQuery natif fonctionne mais perd l'avantage du data lake (stockage ouvert, accès multi-moteur). Le lakehouse vise justement à éviter cette duplication en gardant les données dans un format ouvert.",
+      "D": "Bigtable est une base NoSQL orientée séries temporelles, non adaptée aux requêtes SQL analytiques ni au stockage de données brutes au format Parquet."
+    },
+    gcpLink: "https://cloud.google.com/biglake/docs/introduction"
+  },
+  {
+    id: 56,
+    domain: "Conception de systèmes de traitement de données",
+    difficulty: "facile",
+    question: "Quelle est la principale différence entre Cloud Dataflow et Cloud Dataproc pour le traitement de données sur GCP ?",
+    options: [
+      { label: "A", text: "Dataflow est pour le batch uniquement, Dataproc pour le streaming uniquement" },
+      { label: "B", text: "Dataflow est un service serverless basé sur Apache Beam, Dataproc est un service managé Hadoop/Spark avec des clusters provisionnés" },
+      { label: "C", text: "Dataflow est gratuit tandis que Dataproc est payant" },
+      { label: "D", text: "Dataproc est serverless tandis que Dataflow nécessite de gérer des clusters" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Dataflow est un service entièrement serverless basé sur Apache Beam qui gère automatiquement les ressources. Dataproc est un service managé qui provisionne des clusters Hadoop/Spark, idéal pour migrer des workloads Spark/Hadoop existants. Les deux supportent le batch et le streaming.",
+    whyOthersWrong: {
+      "A": "Les deux services supportent le traitement batch et streaming. Dataflow via Apache Beam, Dataproc via Spark Structured Streaming ou Flink.",
+      "C": "Les deux services sont payants. Dataflow facture par vCPU et Go de mémoire utilisés, Dataproc par les VMs du cluster plus un surcoût de gestion.",
+      "D": "C'est l'inverse : Dataflow est serverless (pas de cluster à gérer), tandis que Dataproc nécessite la création et la gestion de clusters (même si c'est managé)."
+    },
+    gcpLink: "https://cloud.google.com/dataflow/docs/concepts/beam-programming-model"
+  },
+  {
+    id: 57,
+    domain: "Conception de systèmes de traitement de données",
+    difficulty: "intermédiaire",
+    question: "Une banque en ligne doit concevoir un système de détection de fraude en temps réel. Chaque transaction doit être évaluée en moins de 200 ms, en comparant les patterns de la transaction avec l'historique des 90 derniers jours du client. Le système traite 5 000 transactions par seconde. Quelle architecture est la plus adaptée ?",
+    options: [
+      { label: "A", text: "Pub/Sub → Cloud Function qui interroge BigQuery pour chaque transaction → réponse au système de paiement" },
+      { label: "B", text: "Pub/Sub → Dataflow avec enrichissement depuis Bigtable (profils clients pré-calculés) → modèle ML sur Vertex AI Endpoint → réponse au système de paiement" },
+      { label: "C", text: "Pub/Sub → Dataflow → BigQuery en streaming → requête BigQuery ML pour chaque transaction" },
+      { label: "D", text: "Écriture directe dans Cloud SQL → trigger PostgreSQL qui exécute un script Python de scoring" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Cette architecture combine Pub/Sub pour l'ingestion fiable, Dataflow pour l'enrichissement en streaming, Bigtable pour les lookups à faible latence (< 10 ms) des profils clients pré-calculés, et un endpoint Vertex AI pour l'inférence ML rapide. L'ensemble peut traiter 5 000 TPS avec une latence inférieure à 200 ms.",
+    whyOthersWrong: {
+      "A": "BigQuery a une latence minimale de plusieurs secondes par requête, incompatible avec l'exigence de 200 ms. Cloud Functions a aussi des problèmes de cold start.",
+      "C": "BigQuery ML ne peut pas servir des prédictions individuelles en moins de 200 ms. La latence de BigQuery est de l'ordre des secondes.",
+      "D": "Cloud SQL ne peut pas gérer 5 000 transactions par seconde avec des triggers qui exécutent des scripts Python. Cette architecture n'est pas scalable et est fragile."
+    },
+    gcpLink: "https://cloud.google.com/vertex-ai/docs/predictions/overview"
+  },
+  {
+    id: 58,
+    domain: "Conception de systèmes de traitement de données",
+    difficulty: "difficile",
+    question: "Vous concevez une plateforme de données pour un groupe hospitalier qui doit respecter des contraintes strictes : données patient hébergées exclusivement en France (région europe-west9), interopérabilité avec le standard FHIR pour les dossiers médicaux, et capacité d'analyse agrégée pour la recherche clinique. Quelle architecture est la plus adaptée ?",
+    options: [
+      { label: "A", text: "Cloud Healthcare API (FHIR store) dans la région europe-west9, avec export vers BigQuery pour l'analyse, et VPC Service Controls pour l'isolation" },
+      { label: "B", text: "Cloud SQL PostgreSQL en europe-west9 avec un schéma FHIR custom et des exports CSV vers BigQuery" },
+      { label: "C", text: "Firestore en europe-west9 pour stocker les documents FHIR et Dataflow pour l'analyse" },
+      { label: "D", text: "Cloud Spanner multi-régional EU pour les données patient et BigQuery pour l'analyse" }
+    ],
+    correctAnswers: ["A"],
+    explanation: "Cloud Healthcare API fournit un FHIR store natif conforme au standard HL7 FHIR, avec un support direct de l'API FHIR REST. Le déploiement en europe-west9 garantit la résidence des données en France. L'export natif vers BigQuery permet l'analyse pour la recherche clinique. VPC Service Controls empêche l'exfiltration des données sensibles.",
+    whyOthersWrong: {
+      "B": "Un schéma FHIR custom dans PostgreSQL nécessite un développement et une maintenance considérables pour implémenter correctement le standard FHIR. Cloud Healthcare API est la solution native et conforme.",
+      "C": "Firestore n'est pas conçu pour stocker des ressources FHIR de manière conforme au standard. L'absence de validation FHIR native rend cette approche risquée pour des données médicales réglementées.",
+      "D": "Cloud Spanner multi-régional EU ne garantit pas la résidence exclusive en France (europe-west9). Les données pourraient être répliquées dans d'autres pays de l'UE, ce qui peut ne pas satisfaire les exigences réglementaires françaises spécifiques."
+    },
+    gcpLink: "https://cloud.google.com/healthcare-api/docs/concepts/fhir"
   }
 ];

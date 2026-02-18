@@ -1,4 +1,4 @@
-import { Question } from './types';
+import type { Question } from './types';
 
 export const domain4Questions: Question[] = [
   {
@@ -160,5 +160,165 @@ export const domain4Questions: Question[] = [
       "D": "Il n'existe pas d'Organization Policy spécifique qui désactive globalement l'export BigQuery de cette manière. VPC Service Controls est le mécanisme conçu pour ce cas d'usage."
     },
     gcpLink: "https://cloud.google.com/vpc-service-controls/docs/overview"
+  },
+  {
+    id: 76,
+    domain: "Sécurité, conformité et gouvernance des données",
+    difficulty: "facile",
+    question: "Votre entreprise utilise BigQuery et Cloud Storage. Le responsable sécurité exige que les données soient chiffrées au repos. Quelle action devez-vous entreprendre ?",
+    options: [
+      { label: "A", text: "Activer manuellement le chiffrement AES-256 sur chaque table BigQuery et chaque bucket Cloud Storage" },
+      { label: "B", text: "Aucune action : Google Cloud chiffre automatiquement toutes les données au repos par défaut avec AES-256" },
+      { label: "C", text: "Configurer Cloud KMS et créer des clés de chiffrement pour chaque service" },
+      { label: "D", text: "Installer un logiciel de chiffrement tiers sur les VMs qui accèdent aux données" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Google Cloud chiffre automatiquement toutes les données au repos par défaut, sans aucune configuration nécessaire. Le chiffrement utilise AES-256 avec des clés gérées par Google (Google-managed encryption keys). Cette fonctionnalité est gratuite et toujours active.",
+    whyOthersWrong: {
+      "A": "Il n'y a pas besoin d'activer manuellement le chiffrement car il est automatique sur tous les services GCP. Il n'existe pas d'option pour le désactiver.",
+      "C": "Cloud KMS est nécessaire uniquement si l'entreprise souhaite gérer ses propres clés (CMEK). Le chiffrement par défaut est déjà actif sans KMS.",
+      "D": "Un logiciel tiers est inutile car le chiffrement est intégré nativement dans l'infrastructure Google Cloud au niveau du stockage."
+    },
+    gcpLink: "https://cloud.google.com/security/encryption/default-encryption"
+  },
+  {
+    id: 77,
+    domain: "Sécurité, conformité et gouvernance des données",
+    difficulty: "intermédiaire",
+    question: "Votre entreprise doit anonymiser des données personnelles (noms, emails, numéros de téléphone) dans un dataset BigQuery de 10 To avant de le partager avec une équipe d'analyse externe. L'anonymisation doit être réversible pour les utilisateurs autorisés. Quelle technique Cloud DLP utilisez-vous ?",
+    options: [
+      { label: "A", text: "Le masquage (redaction) qui remplace les données par des astérisques" },
+      { label: "B", text: "La tokenisation par chiffrement préservant le format (Format Preserving Encryption) avec une clé stockée dans Cloud KMS" },
+      { label: "C", text: "Le hachage (hashing) des données sensibles avec SHA-256" },
+      { label: "D", text: "Le remplacement par des données fictives générées aléatoirement" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "La tokenisation par Format Preserving Encryption (FPE) de Cloud DLP remplace les données sensibles par des tokens chiffrés qui préservent le format original (un email reste sous forme d'email, un téléphone reste sous forme de téléphone). Avec la clé KMS, les utilisateurs autorisés peuvent re-identifier les données. C'est la seule technique réversible.",
+    whyOthersWrong: {
+      "A": "Le masquage est irréversible : les données originales sont définitivement perdues et remplacées par des astérisques. Il ne permet pas la ré-identification par des utilisateurs autorisés.",
+      "C": "Le hachage SHA-256 est une fonction à sens unique : il est impossible de retrouver les données originales à partir du hash. Ce n'est pas réversible.",
+      "D": "Les données fictives aléatoires n'ont aucun lien avec les données originales. La ré-identification est impossible car la correspondance original-fictif n'est pas conservée."
+    },
+    gcpLink: "https://cloud.google.com/sensitive-data-protection/docs/pseudonymization"
+  },
+  {
+    id: 78,
+    domain: "Sécurité, conformité et gouvernance des données",
+    difficulty: "intermédiaire",
+    question: "Votre pipeline Dataflow accède à une base Cloud SQL en utilisant un mot de passe stocké en dur dans le code source. Le RSSI demande de sécuriser cette connexion. Quelle est la meilleure pratique pour gérer les secrets dans les pipelines de données sur GCP ?",
+    options: [
+      { label: "A", text: "Stocker le mot de passe dans une variable d'environnement sur les workers Dataflow" },
+      { label: "B", text: "Utiliser Secret Manager pour stocker le secret et le récupérer au runtime via l'API Secret Manager" },
+      { label: "C", text: "Chiffrer le mot de passe avec Cloud KMS et le stocker dans le code source chiffré" },
+      { label: "D", text: "Stocker le mot de passe dans un fichier de configuration dans Cloud Storage avec des permissions restreintes" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Secret Manager est le service GCP dédié au stockage sécurisé des secrets (mots de passe, clés API, certificats). Il offre le versioning, le contrôle d'accès IAM, l'audit des accès, et la rotation automatique des secrets. Le pipeline récupère le secret au runtime sans jamais l'exposer dans le code ou la configuration.",
+    whyOthersWrong: {
+      "A": "Les variables d'environnement peuvent être exposées dans les logs, les dumps de processus ou les métadonnées d'instance. Ce n'est pas un stockage sécurisé pour les secrets.",
+      "C": "Stocker un secret chiffré dans le code source reste une mauvaise pratique : le secret est versionné dans Git, la rotation est complexe, et il faut gérer la clé KMS séparément.",
+      "D": "Un fichier dans Cloud Storage, même avec des permissions restreintes, n'offre pas le versioning, l'audit d'accès ni la rotation automatique. Secret Manager est spécifiquement conçu pour ce besoin."
+    },
+    gcpLink: "https://cloud.google.com/secret-manager/docs/overview"
+  },
+  {
+    id: 79,
+    domain: "Sécurité, conformité et gouvernance des données",
+    difficulty: "difficile",
+    question: "Votre organisation utilise un data lake dans Cloud Storage contenant des données de différentes sensibilités (publiques, internes, confidentielles, restreintes). Vous devez mettre en place une gouvernance automatisée qui classe automatiquement les données, applique des politiques d'accès basées sur la classification, et surveille la conformité en continu. Quelle solution est la plus complète ?",
+    options: [
+      { label: "A", text: "Cloud DLP pour scanner tous les buckets et classer les données, puis appliquer manuellement les permissions IAM" },
+      { label: "B", text: "Dataplex avec des zones de données (raw, curated) et des règles de gouvernance automatisées, intégré avec Data Catalog pour le tagging et DLP pour la classification" },
+      { label: "C", text: "Créer des buckets séparés par niveau de sensibilité et gérer les permissions IAM manuellement" },
+      { label: "D", text: "Utiliser Organization Policies pour restreindre les accès au niveau de l'organisation" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Dataplex fournit une gouvernance unifiée du data lake avec des zones de données organisées par niveau de traitement. Intégré avec Data Catalog pour les métadonnées et le tagging, et DLP pour la classification automatique, il offre une solution complète de gouvernance avec des politiques automatisées, la surveillance de conformité et le contrôle d'accès basé sur les métadonnées.",
+    whyOthersWrong: {
+      "A": "Cloud DLP seul peut scanner et classifier mais n'offre pas d'orchestration de gouvernance. L'application manuelle des permissions n'est pas scalable et sujette aux erreurs humaines.",
+      "C": "Des buckets séparés sont une approche simpliste qui ne scale pas. La gestion manuelle des permissions est source d'erreurs et ne surveille pas la conformité en continu.",
+      "D": "Organization Policies définissent des contraintes globales (ex: régions autorisées) mais ne classifient pas les données ni n'appliquent des politiques granulaires basées sur la sensibilité des données."
+    },
+    gcpLink: "https://cloud.google.com/dataplex/docs/overview"
+  },
+  {
+    id: 80,
+    domain: "Sécurité, conformité et gouvernance des données",
+    difficulty: "difficile",
+    question: "Votre entreprise utilise BigQuery avec des données contenant des informations personnelles soumises au droit à l'oubli du RGPD. Un client demande la suppression de toutes ses données. Les données sont réparties dans 15 tables partitionnées par date. Comment implémentez-vous le droit à l'oubli de manière efficace dans BigQuery ?",
+    options: [
+      { label: "A", text: "Utiliser des requêtes DELETE avec DML pour supprimer les lignes du client dans chaque table" },
+      { label: "B", text: "Recréer chaque table en excluant les données du client avec des requêtes CREATE TABLE AS SELECT" },
+      { label: "C", text: "Utiliser le crypto-shredding : chiffrer les données personnelles avec une clé AEAD par client dans BigQuery, puis détruire la clé pour rendre les données illisibles" },
+      { label: "D", text: "Supprimer les partitions contenant les données du client" }
+    ],
+    correctAnswers: ["C"],
+    explanation: "Le crypto-shredding consiste à chiffrer les données personnelles avec une clé unique par client (via les fonctions AEAD de BigQuery ou Cloud KMS). Pour le droit à l'oubli, il suffit de détruire la clé du client : toutes ses données deviennent immédiatement et définitivement illisibles, sans nécessiter de DELETE coûteux sur 15 tables.",
+    whyOthersWrong: {
+      "A": "Les requêtes DML DELETE dans BigQuery réécrivent les partitions entières, ce qui est très coûteux pour 15 tables partitionnées. De plus, le time travel conserve les données supprimées pendant 7 jours.",
+      "B": "Recréer 15 tables est extrêmement coûteux en termes de stockage temporaire et de calcul. Cette approche ne scale pas et nécessite une interruption de service.",
+      "D": "Supprimer des partitions entières supprimerait les données de tous les clients de ces partitions, pas seulement celles du client demandeur."
+    },
+    gcpLink: "https://cloud.google.com/bigquery/docs/reference/standard-sql/aead-encryption-concepts"
+  },
+  {
+    id: 81,
+    domain: "Sécurité, conformité et gouvernance des données",
+    difficulty: "intermédiaire",
+    question: "Votre équipe data engineering doit donner accès à des analystes externes (d'une société de conseil) à certains datasets BigQuery pendant une mission de 3 mois. Les analystes n'ont pas de comptes Google. Comment leur donnez-vous accès de manière sécurisée et temporaire ?",
+    options: [
+      { label: "A", text: "Créer des comptes Google Cloud pour chaque analyste externe" },
+      { label: "B", text: "Utiliser Workload Identity Federation avec le fournisseur d'identité de la société de conseil, et appliquer des conditions IAM avec une date d'expiration" },
+      { label: "C", text: "Partager les credentials d'un compte de service avec les analystes" },
+      { label: "D", text: "Exporter les données dans des fichiers CSV et les partager via Google Drive" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Workload Identity Federation permet aux identités externes (Azure AD, Okta, SAML, OIDC) d'accéder aux ressources GCP sans créer de comptes Google. Les conditions IAM permettent de limiter l'accès dans le temps (expiration après 3 mois). C'est l'approche la plus sécurisée pour les identités externes temporaires.",
+    whyOthersWrong: {
+      "A": "Créer des comptes Google Cloud pour des externes nécessite une gestion du cycle de vie (désactivation après la mission), risque d'oubli, et complexifie l'administration.",
+      "C": "Partager des credentials de compte de service est une mauvaise pratique de sécurité : pas de traçabilité individuelle, pas de MFA, et le secret peut être partagé ou compromis.",
+      "D": "Exporter en CSV perd le contrôle d'accès, ne permet pas de requêtes SQL, et les données sont copiées hors de GCP sans gouvernance."
+    },
+    gcpLink: "https://cloud.google.com/iam/docs/workload-identity-federation"
+  },
+  {
+    id: 82,
+    domain: "Sécurité, conformité et gouvernance des données",
+    difficulty: "facile",
+    question: "Quelle est la différence entre un rôle prédéfini (predefined role) et un rôle personnalisé (custom role) dans Google Cloud IAM ?",
+    options: [
+      { label: "A", text: "Les rôles prédéfinis sont gratuits tandis que les rôles personnalisés sont payants" },
+      { label: "B", text: "Les rôles prédéfinis sont créés et maintenus par Google avec un ensemble fixe de permissions, tandis que les rôles personnalisés permettent de définir un ensemble spécifique de permissions adapté à vos besoins" },
+      { label: "C", text: "Les rôles personnalisés offrent plus de permissions que les rôles prédéfinis" },
+      { label: "D", text: "Les rôles prédéfinis ne peuvent être appliqués qu'aux utilisateurs, les rôles personnalisés qu'aux comptes de service" }
+    ],
+    correctAnswers: ["B"],
+    explanation: "Les rôles prédéfinis sont des ensembles de permissions pré-configurés par Google pour les cas d'usage courants (ex: BigQuery Data Viewer, Storage Object Admin). Les rôles personnalisés permettent de sélectionner les permissions individuelles nécessaires pour respecter le principe du moindre privilège quand les rôles prédéfinis sont trop larges.",
+    whyOthersWrong: {
+      "A": "Les deux types de rôles sont gratuits. IAM ne facture pas l'utilisation de rôles, qu'ils soient prédéfinis ou personnalisés.",
+      "C": "Les rôles personnalisés ne peuvent contenir que des permissions qui existent dans les rôles prédéfinis. Ils ne donnent pas accès à des permissions supplémentaires, ils permettent de restreindre.",
+      "D": "Les deux types de rôles peuvent être attribués à des utilisateurs, des groupes, des comptes de service ou des domaines, sans restriction."
+    },
+    gcpLink: "https://cloud.google.com/iam/docs/understanding-roles"
+  },
+  {
+    id: 83,
+    domain: "Sécurité, conformité et gouvernance des données",
+    difficulty: "difficile",
+    question: "Votre organisation a mis en place des VPC Service Controls autour de ses projets contenant des données sensibles. Un pipeline Cloud Composer dans le périmètre doit accéder à une API externe (API météo publique) pour enrichir les données. Les appels échouent avec une erreur « VPC Service Controls: Request is prohibited by organization's policy ». Comment résolvez-vous ce problème sans compromettre la sécurité ?",
+    options: [
+      { label: "A", text: "Supprimer le projet Cloud Composer du périmètre VPC Service Controls" },
+      { label: "B", text: "Configurer une règle d'entrée (ingress rule) dans le périmètre VPC Service Controls pour autoriser le trafic depuis l'API externe" },
+      { label: "C", text: "Configurer une règle de sortie (egress rule) dans le périmètre pour autoriser les appels sortants vers l'API externe spécifique, avec des conditions sur l'identité et la méthode" },
+      { label: "D", text: "Désactiver temporairement VPC Service Controls pendant l'exécution du pipeline" }
+    ],
+    correctAnswers: ["C"],
+    explanation: "Les règles de sortie (egress rules) de VPC Service Controls permettent d'autoriser des communications spécifiques depuis le périmètre vers des ressources externes. En configurant une règle de sortie avec des conditions précises (identité du compte de service, méthode API, ressource cible), vous autorisez uniquement les appels nécessaires sans ouvrir le périmètre de manière excessive.",
+    whyOthersWrong: {
+      "A": "Retirer le projet du périmètre expose toutes les données sensibles de ce projet. C'est disproportionné pour résoudre un problème d'accès à une seule API externe.",
+      "B": "Les règles d'entrée (ingress) contrôlent le trafic entrant dans le périmètre, pas le trafic sortant. Le problème ici est un appel sortant du périmètre vers une API externe.",
+      "D": "Désactiver VPC Service Controls, même temporairement, crée une fenêtre de vulnérabilité où les données sensibles peuvent être exfiltrées. C'est une pratique de sécurité inacceptable."
+    },
+    gcpLink: "https://cloud.google.com/vpc-service-controls/docs/egress-rules"
   }
 ];
